@@ -1,0 +1,148 @@
+/* auction_main.jsp에 추가할 CSS */
+:root {
+    --primary-color: #006AFF;
+    --primary-hover: #0056cc;
+    --secondary-color: #f8f9fa;
+    --border-color: #e9ecef;
+    --text-color: #212529;
+    --text-muted: #6c757d;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --radius: 0.5rem;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --transition: all 0.2s ease-in-out;
+}
+
+body {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', sans-serif;
+    color: var(--text-color);
+    background-color: #f9fafb;
+}
+
+.main-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.auction-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    padding: 1rem 0;
+}
+
+.auction-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-color);
+    margin: 0;
+}
+
+.category-container {
+    background-color: white;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 2rem;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.category-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+}
+
+.category-back {
+    display: inline-flex;
+    align-items: center;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.category-back:hover {
+    color: var(--primary-color);
+}
+
+.category-back i {
+    margin-right: 0.5rem;
+}
+
+.main-category {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    padding: 1rem 1.5rem;
+    margin: 0;
+    gap: 1rem;
+}
+
+.category-text {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-color);
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    transition: var(--transition);
+    background-color: var(--secondary-color);
+}
+
+.category-text:hover {
+    background-color: #e9ecef;
+}
+
+.category-text.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.resent {
+    position: fixed;
+    top: 160px;
+    right: 40px;
+    z-index: 1000;
+    background-color: white;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+}
+
+.page-navigation {
+    display: flex;
+    justify-content: center;
+    margin: 2rem 0;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 992px) {
+    .resent {
+        display: none;
+    }
+
+    .main-container {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-category {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .category-text {
+        width: 100%;
+        text-align: center;
+    }
+}

@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sp.app.mapper.PolicyBoardMapper">
+
+	<!-- 게시글 등록 -->
+	<insert id="insertBoard"
+		parameterType="com.sp.app.model.PolicyBoard">
+		INSERT INTO policy_board (psnum, subject, content, reg_date, hitcount,
+		savefilename, originalfilename, block, userId)
+		VALUES (policy_board_seq.NEXTVAL, #{subject}, #{content,jdbcType=CLOB},
+		SYSDATE, 0, #{savefilename, jdbcType=VARCHAR}, #{originalfilename,
+		jdbcType=VARCHAR}, 0, #{userId})
+	</insert>
+
+	<sql id="where-list">
+		<choose>
+			<when test="schType == 'all'">
+				( INSTR(subject, #{kwd}) &gt; 0
+				OR DBMS_LOB.INSTR(content, #{kwd}) &gt; 0 )
+			</when>
+			<when test="schType == 'reg_date'">
+				( TO_CHAR(reg_date, 'YYYY-MM-DD') = #{kwd}
+				OR TO_CHAR(reg_date, 'YYYYMMDD') = #{kwd} )
+			</when>
+			<when test="schType == 'content'">
+				DBMS_LOB.INSTR(content, #{kwd}) &gt; 0
+			</when>
+			<otherwise>
+				INSTR(${schType}, #{kwd}) &gt; 0
+			</otherwise>
+		</choose>
+	</sql>
+
+	<!-- 게시글 개수 조회 -->
+	<select id="dataCount" parameterType="map" resultType="Integer">
+		SELECT NVL(COUNT(b.psnum), 0)
+		FROM policy_board b
+		JOIN member m ON b.userId = m.id
+		<where>
+			<if test="kwd != null and kwd != ''">
+				<include refid="where-list" />
+			</if>
+			AND b.block = 0
+		</where>
+	</select>
+
+	<!-- 게시글 목록 -->
+	<select id="listBoard" parameterType="map" resultType="com.sp.app.model.PolicyBoard">
+		SELECT b.psnum, b.subject, 
+               b.content AS content,
+               b.reg_date, b.hitcount, b.savefilename, b.originalfilename, b.block, m.nickname
+		FROM policy_board b
+		JOIN member m ON b.userId = m.id
+		<where>
+			<if test="kwd != null and kwd != ''">
+				<include refid="where-list" />
+			</if>
+			AND b.block = 0
+		</where>
+		ORDER BY b.psnum DESC
+		OFFSET #{offset} ROWS FETCH FIRST #{size} ROWS ONLY
+	</select>
+
+	<!-- 특정 게시글 조회 -->
+	<select id="findById" parameterType="long" resultType="com.sp.app.model.PolicyBoard">
+		SELECT b.psnum, b.subject, 
+               b.content AS content,  
+               b.hitcount, b.reg_date, b.savefilename, b.originalfilename, b.block, 
+               m.nickname, b.userId
+		FROM policy_board b
+		JOIN member m ON b.userId = m.id
+		WHERE b.psnum = #{psnum} AND b.block = 0
+	</select>
+
+	<!-- 이전 게시글 조회 -->
+	<select id="findByPrev" parameterType="map" resultType="com.sp.app.model.PolicyBoard">
+		SELECT b.psnum, b.subject
+		FROM policy_board b
+		JOIN member m ON b.userId = m.id
+		<where>
+			<if test="kwd != null and kwd != ''">
+				<include refid="where-list" />
+			</if>
+			AND (b.psnum &gt; #{psnum})
+			AND b.block = 0
+		</where>
+		ORDER BY b.psnum ASC
+		FETCH FIRST 1 ROWS ONLY
+	</select>
+
+	<!-- 다음 게시글 조회 -->
+	<select id="findByNext" parameterType="map" resultType="com.sp.app.model.PolicyBoard">
+		SELECT b.psnum, b.subject
+		FROM policy_board b
+		JOIN member m ON b.userId = m.id
+		<where>
+			<if test="kwd != null and kwd != ''">
+				<include refid="where-list" />
+			</if>
+			AND (b.psnum &lt; #{psnum})
+			AND b.block = 0
+		</where>
+		ORDER BY b.psnum DESC
+		FETCH FIRST 1 ROWS ONLY
+	</select>
+
+	<!-- 조회수 증가 -->
+	<update id="updateHitCount" parameterType="Long">
+		UPDATE policy_board SET hitcount = hitcount + 1
+		WHERE psnum = #{psnum}
+	</update>
+
+	<!-- 게시글 수정 -->
+	<update id="updateBoard" parameterType="com.sp.app.model.PolicyBoard">
+		UPDATE policy_board
+		SET subject = #{subject},
+		content = #{content, jdbcType=CLOB},
+		savefilename = #{savefilename, jdbcType=VARCHAR},
+		originalfilename = #{originalfilename, jdbcType=VARCHAR}
+		WHERE psnum = #{psnum}
+	</update>
+
+	<!-- 게시글 삭제 -->
+	<delete id="deleteBoard" parameterType="Long">
+		DELETE FROM policy_board WHERE psnum = #{psnum}
+	</delete>
+
+	<!-- 좋아요 추가 -->
+	<insert id="insertBoardLike" parameterType="map">
+		INSERT INTO policy_board_like (psnum, userId)
+		VALUES (#{psnum}, #{userId})
+	</insert>
+
+	<!-- 좋아요 삭제 -->
+	<delete id="deleteBoardLike" parameterType="map">
+		DELETE FROM policy_board_like
+		WHERE psnum = #{psnum} AND userId = #{userId}
+	</delete>
+
+	<!-- 좋아요 개수 조회 -->
+	<select id="boardLikeCount" parameterType="Long" resultType="Integer">
+		SELECT COUNT(*) FROM policy_board_like WHERE psnum = #{psnum}
+	</select>
+
+	<!-- 댓글 추가 -->
+	<insert id="insertReply" parameterType="com.sp.app.model.PolicyReply">
+		INSERT INTO policy_board_reply (replyNum, psnum, userId, content, reg_date,
+		parentNum, showReply, block)
+		VALUES (policy_board_reply_seq.NEXTVAL, #{psnum}, #{userId}, #{content,
+		jdbcType=CLOB}, SYSDATE, #{parentNum}, 1, 0)
+	</insert>
+
+	<!-- 댓글 삭제 -->
+	<delete id="deleteReply" parameterType="map">
+		DELETE FROM policy_board_reply WHERE replyNum = #{replyNum}
+	</delete>
+	
+	  <select id="replyCount" parameterType="map" resultType="Integer">
+      	SELECT NVL(COUNT(*), 0)
+      	FROM policy_board_reply
+      	WHERE psnum = #{psnum} AND parentNum = 0 AND block =0
+      </select>
+
+	<!-- 댓글 목록 조회 -->
+	   <select id="listReply" parameterType="map" resultType="com.sp.app.model.PolicyReply">
+      	SELECT r.replyNum, r.userId, m.nickName, r.psnum,
+      		r.content, r.reg_date, r.showReply, 
+      		NVL(answerCount, 0) answerCount,
+      		NVL(likeCount, 0) likeCount,
+      		NVL(disLikeCount, 0) disLikeCount
+      	FROM policy_board_reply r
+      	JOIN member m ON r.userId = m.id
+      	LEFT OUTER JOIN (
+      		SELECT parentNum, COUNT(*) answerCount
+      		FROM policy_board_reply
+      		WHERE parentNum != 0 AND block = 0
+      		GROUP BY parentNum
+      	) a ON r.replyNum = a.parentNum
+      	LEFT OUTER JOIN (
+      		SELECT replyNum, COUNT(DECODE(replyLike, 1, 1)) likeCount,
+      			COUNT(DECODE(replyLike, 0, 1)) disLikeCount
+      		FROM policy_reply_like
+      		GROUP BY replyNum
+      	) c ON r.replyNum = c.replyNum
+      	WHERE psnum = #{psnum} AND r.parentNum = 0 AND r.block = 0
+      	ORDER BY r.replyNum DESC
+      	OFFSET #{offset} ROWS FETCH FIRST #{size} ROWS ONLY
+      </select>
+	
+	 <!-- 댓글의 답글 -->
+      <select id="listReplyAnswer" parameterType="map" resultType="com.sp.app.model.PolicyReply">
+      	SELECT r.replyNum, r.psnum, r.userId, m.nickName, r.content, r.reg_date, r.parentNum, r.showReply
+      	FROM policy_board_reply r
+      	JOIN member m ON r.userId = m.id AND r.block = 0
+      	WHERE parentNum = #{parentNum}
+      	ORDER BY replyNum DESC 
+      </select>
+      
+      <select id="replyAnswerCount" parameterType="map" resultType="Integer">
+      	SELECT NVL(COUNT(*), 0)
+      	FROM policy_board_reply
+      	WHERE parentNum = #{parentNum} AND block = 0      
+      </select>
+      
+      <!-- 좋아요/ 싫어요 -->
+      <insert id="insertReplyLike" parameterType="map">
+      	INSERT INTO policy_reply_like(replyNum, userId, replyLike)
+      	VALUES(#{replyNum}, #{userId}, #{replyLike})
+      </insert>
+      
+      <select id="replyLikeCount" parameterType="map" resultType="map">
+      	SELECT COUNT(DECODE(replyLike, 1, 1)) likeCount,
+      		COUNT(DECODE(replyLike, 0, 1)) disLikeCount
+      	FROM policy_reply_like
+      	WHERE replyNum = #{replyNum}
+      </select>
+	
+	
+	<select id="userReplyLiked" parameterType="map" resultType="Integer">
+      	SELECT replyLike
+      	FROM policy_reply_like
+      	WHERE replyNum=#{replyNum} AND userId = #{userId}
+      </select>
+	
+
+
+</mapper>

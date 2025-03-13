@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sp.app.mapper.SellerMapper">
+
+    <sql id="date-search">
+        <choose>
+            <when test="stDate != '' ">
+                AND PA.PARD >= TO_DATE(#{stDate}, 'YYYY-MM-DD')
+            </when>
+            <when test="edDate != ''">
+                AND PA.PARD &lt;= TO_DATE(#{edDate}, 'YYYY-MM-DD')
+            </when>
+            <when test="edDate != '' and stDate != ''">
+                AND PA.PARD >= TO_DATE(#{stDate}, 'YYYY-MM-DD')
+                AND PA.PARD &lt;= TO_DATE(#{edDate}, 'YYYY-MM-DD')
+            </when>
+        </choose>
+    </sql>
+
+    <sql id="category-prize-search">
+        <choose>
+            <when test="categoryType == 'big'">
+                p.PTYPE = '경매' AND CB.CBN = #{cbn}
+            </when>
+            <when test="categoryType == 'small'">
+                p.PTYPE = '경매' AND CS.CSC = #{csc}
+            </when>
+        </choose>
+    </sql>
+
+    <insert id="insertPrize" parameterType="com.sp.app.mypage.controller.dto.request.SellerRequest">
+        BEGIN
+            INSERT INTO PRODUCT(PNUM, PTYPE, PNAME, PCT, PPH, NUM, CSN)
+            VALUES (PRODUCT_SEQ.NEXTVAL, '경매', #{prName}, #{content}, #{thumbnail,jdbcType=VARCHAR}, #{userId}, #{subCategory});
+
+            INSERT INTO PRODUCT_AUCTION(PNUM, LP, PARD, PASD, PAED, PAS, PAT, FP)
+            VALUES (PRODUCT_SEQ.CURRVAL, #{prPrice}, SYSDATE, TO_DATE(#{startDate}, 'YYYY-MM-DD HH24:MI:SS'), TO_DATE(#{endDate}, 'YYYY-MM-DD HH24:MI:SS'), '진행전', #{dealType}, 0);
+        END;
+    </insert>
+
+    <insert id="insertFile" parameterType="com.sp.app.mypage.controller.dto.request.SellerRequest">
+        INSERT INTO PRODUCT_PICTURE(PPNUM, PPP,PNUM)
+        VALUES (PRODUCT_PICTURE_SEQ.NEXTVAL, #{picPath}, PRODUCT_SEQ.CURRVAL)
+    </insert>
+
+    <select id="dataCount" resultType="int">
+        SELECT COUNT(*) FROM PRODUCT P
+        JOIN PRODUCT_AUCTION PA on p.PNUM = PA.PNUM
+        where P.PTYPE = '경매' AND P.NUM = #{userId}
+        <include refid="date-search"/>
+    </select>
+
+    <select id="findBySellerList" resultType="com.sp.app.auction.response.prize.PrizeDetailRep">
+
+    SELECT p.PNUM,
+               PPH      as thumbnail,
+               PNAME    as prName,
+               PASD     AS stDate,
+               PAED     AS edDate,
+               PARD    AS upToDate,
+               LP       AS price,
+               PAS      as prStatus,
+               NICKNAME as sellerName,
+               pat      as tradeType,
+               fp       as finalP,
+               CS.CSN   as smallNum,
+               CB.CBN   as bigNum,
+               p.PCT    as prContent
+        FROM PRODUCT p
+                 JOIN MEMBER M on M.NUM = p.NUM
+                 JOIN PRODUCT_AUCTION PA on p.PNUM = PA.PNUM
+                 JOIN CATEGORY_SMALL CS on CS.CSN = p.CSN
+                 JOIN CATEGORY_BIG CB on CB.CBN = CS.CBN
+        WHERE PTYPE = '경매' AND p.NUM = #{userId}
+        <include refid="date-search"/>
+        ORDER BY p.PNUM
+        OFFSET #{offset} ROWS FETCH FIRST #{size} ROWS ONLY
+    </select>
+
+    <delete id="deleteSeller" parameterType="long">
+            DELETE FROM PRODUCT
+            WHERE PNUM = #{pNum}
+    </delete>
+
+    <select id="findByPictureList" resultType="com.sp.app.auction.response.prize.PrizeDetailRep">
+        SELECT PPP as thumbnail , PPH as prName
+        FROM PRODUCT_PICTURE pc
+        JOIN PRODUCT p on pc.PNUM = p.PNUM
+        WHERE p.PNUM = #{pNum}
+
+    </select>
+
+
+</mapper>

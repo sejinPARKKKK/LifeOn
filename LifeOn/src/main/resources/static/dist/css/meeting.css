@@ -1,0 +1,664 @@
+﻿@charset "UTF-8";
+
+h3 {
+  font-weight: 500;
+}
+
+main {
+  flex: 0 0 auto;
+  padding-top: 20px;
+  
+}
+
+.meeting > a {
+  border-bottom: 1.3px solid var(--light-grey1);
+  display: flex;
+  flex-direction: column;
+  width: 350px;
+  min-height: 188px;
+  background-color: var(--white);
+  justify-content: space-between;
+}
+
+@media (min-width: 768px) {
+  .meeting > a {
+    width: 383px;
+    height: 264px;
+    border-width: 3px;
+    padding: 32px;
+    border-radius: 15px;
+    border: 2px solid var(--light-grey1);
+  }
+
+  .meeting__header {
+    display: grid;
+    flex-direction: column;
+    gap: 1rem;
+    font-size: 13px;
+    margin-bottom: 10px;
+  }
+
+  .meeting__header-detail {
+    display: flex;
+    gap: 8px;
+    font-size: 14px;
+  }
+
+  .meeting__header-detail {
+    display: flex;
+    gap: auto;
+    font-size: 1rem;
+  }
+
+  .meeting__category {
+    border-right: 2px solid var(--main-color);
+    padding-right: 0.5rem;
+  }
+
+  .meeting__region,
+  .meeting__date {
+    color: var(--grey4);
+  }
+
+  .meeting__region::before {
+    width: 12px;
+    height: 12px;
+    flex: 0 0 12px;
+    margin-right: 4px;
+  }
+
+  .meeting__title {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .meeting__title {
+    font-size: 20px;
+  }
+
+  .meeting__tags {
+    display: flex;
+    color: var(--grey1);
+    font-size: 14px;
+    margin-bottom: 14px;
+  }
+
+  .meeting__tags {
+    font-size: 1rem;
+  }
+
+  .meeting__tags > li {
+    margin-right: 4px;
+  }
+
+  .meeting__body-detail {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 1rem;
+  }
+
+  .status {
+    font-size: 14px;
+    font-weight: bold;
+    padding: 4px 0.5rem;
+    border-radius: 5px;
+   	text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+  }
+
+  .status {
+    font-size: 1rem;
+  }
+
+  .status__on {
+    color: var(--main-color);
+    background-color: var(--white);
+    border: 1px solid var(--main-color);
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3)
+  }
+
+  .status__off {
+    color: var(--white);
+    background-color: var(--main-color);
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3)
+  }
+
+  .status__rate {
+    background-color: var(--main-color);
+    width: 100%;
+    height: 43px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  .status__rated {
+    background-color: var(--light-grey1);
+    width: 100%;
+    height: 43px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--grey2);
+    font-size: 16px;
+  }
+
+  .meeting__body-detail-more {
+    display: flex;
+    gap: 8px;
+    font-size: 14px;
+  }
+
+  .meeting__body-detail-more {
+    display: flex;
+    gap: auto;
+    font-size: 1rem;
+  }
+
+  .status__rate {
+    font-size: 18px;
+    height: 50px;
+  }
+
+  .status__rated {
+    font-size: 18px;
+    height: 50px;
+  }
+
+  .meeting__views::before,
+  .meeting__comments::before {
+    width: 24px;
+    height: 24px;
+    flex: 0 0 24px;
+    margin-right: 4px;
+  }
+
+  .my-meeting__title {
+    padding-left: 1px;
+    font-size: 17px;
+    display: inline-flex;
+    align-items: center;
+    font-weight: var(--bold);
+  }
+
+  /* 검색 바 스타일 */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #7fb4ff;
+  border-radius: 20px;
+  padding: 12px 16px;
+  width: 445px;
+  margin: 20px auto;
+}
+
+.search-bar .icon {
+  color: #b3b3b3;
+}
+
+.search-content {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  color: #333;
+  text-align: center;
+}
+
+.dropdown {
+  color: #333;
+  padding: 7.7px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  margin-right: 2px;
+}
+
+/* 카테고리 스타일 */
+.category-container {
+  margin: 20px 0;
+}
+
+.category-nav ul {
+  display: flex;
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+  justify-content: center;
+}
+
+.category {
+  padding: 8px 16px;
+  border-radius: 15px;
+  cursor: pointer;
+}
+
+.category.selected {
+  background-color: #7fb4ff;
+  color: #fff;
+}
+
+/* 페이징 */
+.page-navigation {
+	padding: 0;
+	
+
+}
+
+.page-navigation .pagination {
+    background-color: #FFF;
+    margin: 0;
+    padding-top: 20px;
+    bottom: 0;
+}
+
+.page-navigation .pagination .page-item {
+    border: none;
+    margin: 2px;
+}
+
+.page-navigation .pagination .page-link {
+    border: none;
+    background-color: #FFF;
+    color: #222;
+}
+
+.page-navigation .pagination .page-item.active .page-link {
+	border-radius: 50px;
+    background-color: #006AFF;
+    color: #FFF;
+}
+
+.page-link:hover {
+    text-decoration: none;
+}
+
+.page-navigation .pagination .page-link:focus {
+    box-shadow: none;
+}
+
+/* 기본 버튼 스타일 */
+.btn {
+    height: 40px;
+    background: #fff;
+    color: #333;
+    padding: 6px 8px;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px; /* 기본적으로 모서리 살짝 둥글게 */
+}
+
+.btn:hover,
+.btn:focus,
+.btn:active {
+    background: #f8f9fa;
+    color: #333;
+    border-color: #e0e0e0;
+    opacity: 0.95;
+}
+
+/* 비활성화 버튼 스타일 */
+.btn[disabled],
+fieldset[disabled] .btn {
+    pointer-events: none;
+    cursor: default;
+    opacity: 0.65;
+}
+
+/* 어두운 스타일 버튼 */
+.btn-dark {
+    background: #333;
+    color: #fff;
+    border: 1px solid #222;
+}
+
+.btn-dark:hover,
+.btn-dark:focus,
+.btn-dark:active {
+    background: #222;
+    border-color: #222;
+    color: #fff;
+}
+
+/* 주요 버튼 (파란색) */
+.btn-primary {
+    background: #006AFF;
+    color: #fff;
+    border: 1px solid #006AFF;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+    background: #005FCE;
+    border-color: #005FCE;
+    color: #fff;
+}
+
+.ssbtn {
+	color: #333;
+	background: #fff;
+	padding: 6px 8px;
+	border: 1px solid #e0e0e0;
+	border-radius: 4px;
+}
+
+.ssbtn:hover {
+	background: #f8f9fa;
+}
+/* 확인 버튼 - 주로 모달 하단 같은 데서 쓰이는 스타일 */
+.btnConfirm {
+    background: #006AFF;
+    color: #fff;
+    font-size: 17px;
+    padding: 15px 10px;
+    text-align: center;
+    width: 100%;
+    border-radius: 4px;
+    border: 1px solid #006AFF;
+    vertical-align: baseline;
+}
+
+.btnConfirm:hover,
+.btnConfirm:focus,
+.btnConfirm:active {
+    background: #005FCE;
+    border-color: #005FCE;
+}
+
+/* 활성 상태 강조 버튼 */
+.btn-active,
+.btn-active:focus,
+.btn-active:hover {
+    color: #006AFF;
+    font-weight: 600;
+}
+
+/* 선택 박스와 버튼 조합 스타일 (myselect, mybtn) */
+.myselect {
+    height: 40px;
+    color: #333;
+    padding: 8px;
+    border: 1px solid #e0e0e0;
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.mybtn {
+    height: 40px;
+    background: #fff;
+    color: #333;
+    padding: 6px 8px;
+    border: 1px solid #e0e0e0;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+
+.mybtn:hover {
+    background: #f8f9fa;
+}
+
+/* 모임 옵션 스타일 */
+.meeting__options {
+  display: flex;
+  justify-content: space-between;
+  margin: 20px auto;
+  max-width: 1280px;
+  margin-bottom: -10px;
+}
+
+.region-category .select-box {
+  border: none;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.meeting-activate-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toggle-switch {
+  width: 40px;
+  height: 20px;
+  background: #D9D9D9;
+  border-radius: 10px;
+  position: relative;
+  cursor: pointer;
+}
+
+.toggle-button {
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  border-radius: 50%;
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  transition: 0.3s;
+}
+
+#toggle:checked + .toggle-switch {
+  background: #7fb4ff;
+}
+
+#toggle:checked + .toggle-switch .toggle-button {
+  left: 20px;
+}
+
+.main__content {
+  max-width: 1280px;
+  margin: 20px auto 20px;
+  display: grid;
+  gap: 43px;
+  grid-template-columns: repeat(5, 216px);
+}
+
+/* 모임 리스트 스타일 */
+.meetings {
+  list-style: none;
+  padding: 0;
+  width: 250px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.meeting {
+  display: block;
+  width: 300px;
+  padding: 20px;
+  background: #fff;
+  text-decoration: none;
+  color: inherit;
+}
+
+.meeting__title {
+  font-size: 17px;
+  
+ 
+}
+
+.meeting__info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+          
+}
+
+.meeting__info-detail-more {
+  text-align: left;
+}
+
+.meeting__info-detail-more div {
+  text-align: right;
+}
+
+.meeting_infos {
+ text-align: left;
+ font-size: 10px; 	
+ color: #7F7F7F;
+ margin-top: 15px;
+	
+}
+
+.meeting_infos .meeting__category {
+    margin-right: -7px; 
+}
+
+.meeting__tags {
+  display: flex;
+  gap: 5px;
+  list-style: none;
+  padding: 0;
+}
+
+.meeting__status {
+  padding: 4px 8px;
+  border-radius: 5px;
+  display: inline-block;
+  width: 60px;
+  text-align: center;
+  margin-top: 3px;
+}
+
+.meeting__status--on {
+  background: #7fb4ff;
+  color: #fff;
+  
+}
+
+.meeting__status--off {
+  background: #fff;
+  color: #7fb4ff;
+  border: 1px solid #7fb4ff;
+}
+
+/* 검색 결과 없음 */
+.result-none {
+  text-align: center;
+  display: none;
+  margin-top: 20px;
+}
+
+.result-none p {
+  margin: 5px 0;
+}
+
+/* 로딩 애니메이션 */
+.lds-roller {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100px;
+}
+/* 모임신청 모달 */
+.apply-btn {
+ background-color: #7fb4ff;
+ color: white;
+ border: none;
+ width: 85px;
+ height: 35PX;
+ border-radius: 10px;
+ font-size: 17px;
+ cursor: pointer;
+ text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+      }
+.modal-overlay {
+     position: fixed;
+     top: 0;
+     left: 0;
+     width: 100%;
+     height: 100%;
+     background-color: rgba(0, 0, 0, 0.5);
+     display: none;
+     justify-content: center;
+     align-items: center;
+     z-index: 1000;
+ }
+
+ .modal-container {
+     width: 90%;
+     max-width: 400px;
+     border-radius: 10px;
+     overflow: hidden;
+     background-color: white;
+     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+ }
+
+ .modal-header {
+     background-color: #7fb4ff;
+     padding: 22px;
+     position: relative;
+ }
+
+ .close-btn {
+     position: absolute;
+     right: 15px;
+     top: 8px;
+     background: none;
+     border: none;
+     font-size: 24px;
+     color: white;
+     cursor: pointer;
+ }
+
+ .modal-content {
+     padding: 30px 20px;
+     text-align: center;
+ }
+
+ .modal-content h2 {
+     font-size: 18px;
+     line-height: 1.5;
+     margin-bottom: 10px;
+     font-weight: normal;
+ }
+
+ .modal-actions {
+     display: flex;
+     justify-content: center;
+     padding: 0 20px 30px 20px;
+     gap: 15px;
+ }
+
+ .cancel-btn {
+     background: none;
+     border: 1px solid #7fb4ff;
+     width: 85px;
+     height:30px;
+     border-radius: 10px;
+     color: #7fb4ff;
+     font-size: 16px;
+     cursor: pointer;
+ }
+
+ .confirm-btn {
+     background-color: #7fb4ff;;
+     color: white;
+     border: none;
+     width: 85px;
+     height:30px;
+     border-radius: 10px;
+     font-size: 16px;
+     cursor: pointer;
+ }
+
+ .modal-show {
+     display: flex;
+ }
+}

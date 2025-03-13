@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sp.app.mapper.OrderMapper">
+	
+	<insert id="insertOrder" parameterType="com.sp.app.model.Order">
+		INSERT INTO ord (onum, od, op, odpp, oup, ofp, os, num)
+		VALUES (ord_seq.NEXTVAL, SYSDATE, #{op}, 0, #{oup}, #{ofp}, '결제완료', #{num})
+	</insert>
+	
+	<insert id="insertOrderDetail" parameterType="com.sp.app.model.Order">
+		INSERT INTO ord_detail (odnum, onum, odq, odp, ods, pnum)
+		VALUES (ord_detail_seq.NEXTVAL, ord_seq.CURRVAL, #{odq}, #{odp}, 0 ,#{pnum} )
+	</insert>
+	
+	<select id="getTotalOdq" resultType="Integer" parameterType="Long">
+	    SELECT COALESCE(SUM(odq), 0)
+	    FROM ORD_DETAIL
+	    WHERE pnum = #{pnum}
+	</select>
+	
+	<select id="dataCount" parameterType="map" resultType="Integer">
+		SELECT count(*)
+		FROM ord_detail od
+		JOIN ord o ON o.onum = od.onum
+		WHERE o.num = #{num}
+	</select>
+	
+	<select id="listOrder" parameterType="map" resultType="com.sp.app.model.Order">
+		SELECT p.pname, p.pph, od.odq, o.op, o.os, o.od
+		FROM ord_detail od
+		JOIN ord o ON o.onum = od.onum
+		JOIN product p ON p.pnum = od.pnum
+		WHERE o.num= #{num}
+		ORDER BY o.onum DESC
+		OFFSET #{offset} ROWS FETCH FIRST #{size} ROWS ONLY
+	</select>
+	
+</mapper>

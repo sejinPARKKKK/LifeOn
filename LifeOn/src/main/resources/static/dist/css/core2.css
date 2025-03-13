@@ -1,0 +1,70 @@
+﻿@charset "UTF-8";
+
+@font-face {
+    font-family: 'NEXON Lv1 Gothic OTF';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@2.1/NEXON Lv1 Gothic OTF.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+* { padding: 0; margin: 0; font-family: 'NEXON Lv1 Gothic OTF', sans-serif; }
+*, *::after, *::before { box-sizing: border-box; }
+
+body { font-size: 14px; font-family: 'NEXON Lv1 Gothic OTF', sans-serif; }
+
+a { text-decoration: none; color: #333; }
+a:hover, a:active{ text-decoration: underline; cursor: pointer; color: #006AFF; }
+
+textarea:focus, input:focus { outline: none; }
+
+/* clear */
+.clear::after { content:''; display:block; clear: both; }
+
+.border-top1 { border-top: 1px solid #212529; }
+.border-top2 { border-top: 2px solid #212529; }
+.border-bottom1 { border-bottom: 1px solid #212529; }
+.border-bottom2 { border-bottom: 2px solid #212529; }
+
+/* header */
+.fixed-top { position: fixed; top: 0; left: 0; right: 0; }
+header {
+	background: #FFF;
+	box-shadow: 0 1px 6px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* main */
+main { margin-top: 76px; }
+
+.wrapper {
+	padding: 50px 20px 20px 20px;
+	transition: all 0.3s ease-out;
+}
+
+/* Small devices (tablets) */
+@media (min-width: 768px) {
+}
+
+/* Medium devices (desktops) */
+@media (min-width: 992px) {
+  body {
+    overflow-y: scroll;
+  }
+
+  .wrapper {
+    margin-left: 200px;
+  }
+
+  .wrapper__minify {
+    margin-left: 50px;
+  }
+}
+
+/* container */
+
+
+/* 페이징 */
+.page-navigation {
+	clear: both;
+	padding: 20px 0;
+	text-align: center;
+}

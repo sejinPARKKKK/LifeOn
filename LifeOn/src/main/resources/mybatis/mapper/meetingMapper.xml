@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sp.app.mapper.MeetingMapper">
+	
+	<select id="meetingSeq" resultType="Long">
+		SELECT meeting_seq.NEXTVAL FROM dual
+	</select>
+	
+	<insert id="insertBoard" parameterType="com.sp.app.model.Meeting">
+		INSERT INTO GROUP_BOARD (psnum, num, subject, content, hitCount, idaddr, ies, loca, loca_d,
+					gender, age, cbn, person_c, mdate, reg_date, blind)
+		VALUES (#{psnum}, #{num}, #{subject}, #{content}, 0, #{idaddr}, '모집중', #{loca}, #{loca_d},
+				#{gender}, #{age}, #{cbn}, #{person_c}, TO_DATE(#{mdate}, 'YYYY-MM-DD'), SYSDATE, 0)
+	</insert>
+	
+	
+	<select id="listCategory" resultType="com.sp.app.model.Meeting">
+		SELECT cbn, cbc
+		FROM GROUP_CATEGORY	 
+	</select>
+	
+	<sql id="searchSql">
+		<choose>
+			<when test="schType == 'all'">
+				(INSTR(subject, #{kwd}) &gt; 0
+			    	OR DBMS_LOB.INSTR(content, #{kwd}) &gt; 0 )
+			</when>
+			
+			<when test="schType == 'reg_date'">
+				(TO_CHAR(prd, 'YYYY-MM-DD') = #{kwd}
+			    	OR TO_CHAR(prd, 'YYYYMMDD') = #{kwd})
+			</when>
+			
+			<when test="schType == 'status'">
+				INSTR(ies, #{kwd}) &gt; 0
+			</when>
+			
+			<when test="schType == 'loca'">
+				INSTR(loca, #{kwd}) &gt; 0
+			</when>
+			<otherwise>
+				INSTR(${schType}, #{kwd}) &gt; 0
+			</otherwise>
+		</choose>
+	</sql>
+	
+	<select id="dataCount" parameterType="map" resultType="Integer">
+		SELECT NVL(COUNT(*), 0)
+		FROM GROUP_BOARD gb
+		JOIN MEMBER m ON gb.num = m.num
+		<where>
+			<if test="kwd != null and kwd != '' ">
+				<include refid="searchSql"/>
+			</if>
+		</where>
+	</select>
+	
+	<select id="listBoard" parameterType="map" resultType="com.sp.app.model.Meeting">
+		SELECT gb.psnum, m.num, gb.subject, gb.ies, gb.age, gb.person_c, gb.gender, gb.loca, TO_CHAR(mdate, 'YYYY-MM-DD') AS mdate,
+		m.grade, g.cbn, g.cbc, gb.hitCount, NVL(replyCount, 0) replyCount,
+		NVL(boardLikeCount, 0) boardLikeCount
+		FROM GROUP_BOARD gb
+		JOIN MEMBER m ON gb.num = m.num	
+		JOIN GROUP_CATEGORY g ON gb.cbn = g.cbn
+		LEFT OUTER JOIN (
+			SELECT COUNT(*) replyCount, psnum, rpblind
+			FROM GROUP_BOARD_REPLY
+			WHERE rpblind = 0
+			GROUP BY psnum, rpblind
+		) c ON gb.psnum = c.psnum
+		LEFT OUTER JOIN (
+			SELECT psnum, COUNT(*) boardLikeCount
+			FROM GROUP_BOARD_FAV
+			GROUP BY psnum
+		) gf ON gb.psnum = gf.psnum
+		<where>
+			<if test="kwd != null and kwd != ''">
+				<include refid="searchSql"/>
+			</if>
+			 <if test="cbn > 0">
+       			 AND gb.cbn = #{cbn}
+    		</if>
+		</where>
+		ORDER BY gb.psnum DESC
+		OFFSET #{offset} ROWS FETCH FIRST #{size} ROWS ONLY
+	</select> 
+	
+	<select id="findById" parameterType="Long" resultType="com.sp.app.model.Meeting">
+		SELECT gb.psnum, gb.num, nickname, subject, content, hitCount, gb.reg_date, gb.blind,  m.profile_image,
+			   g.cbn, g.cbc, gb.age, gb.person_c, gb.gender, gb.loca, gb.loca_d, TO_CHAR(mdate, 'YYYY-MM-DD') AS mdate,
+			NVL(replyCount, 0) replyCount, NVL(boardLikeCount, 0) boardLikeCount
+		FROM GROUP_BOARD gb
+		JOIN MEMBER m ON gb.num = m.num
+		JOIN GROUP_CATEGORY g ON gb.cbn = g.cbn
+		LEFT OUTER JOIN (
+			SELECT COUNT(*) replyCount, psnum
+			FROM GROUP_BOARD_REPLY
+			GROUP BY psnum
+		) r ON gb.psnum = r.psnum
+		LEFT OUTER JOIN (
+			SELECT psnum, COUNT(*) boardLikeCount
+			FROM GROUP_BOARD_FAV
+			WHERE psnum = #{psnum}
+			GROUP BY psnum
+		) c ON gb.psnum = c.psnum
+		WHERE gb.psnum = #{psnum}
+	</select>
+	
+	<update id="updateBoard" parameterType="com.sp.app.model.Meeting">
+		UPDATE GROUP_BOARD SET subject = #{subject}, content = #{content}, ies = #{ies}, loca = #{loca}, loca_d = #{loca_d},
+				gender = #{gender}, age = #{age}, cbn = #{cbn}, person_c = #{person_c}, mdate = #{mdate}, uddate = SYSDATE
+		WHERE psnum = #{psnum}
+	</update>
+	
+	<delete id="deleteBoard" parameterType="map">
+		DELETE FROM GROUP_BOARD
+		WHERE psnum = #{psnum}
+	</delete>
+	
+	
+	<update id="updateHitCount" parameterType="Long">
+		UPDATE GROUP_BOARD SET hitCount = hitCount + 1
+		WHERE psnum = #{psnum}
+	</update>
+	
+	<insert id="boardLike" parameterType="map">
+		INSERT INTO GROUP_BOARD_FAV (psnum, num)
+			VALUES (#{psnum}, #{num})
+	</insert>
+	
+	<delete id="deleteBoardLike" parameterType="map">
+		DELETE FROM GROUP_BOARD_FAV
+		WHERE psnum = #{psnum} AND num = #{num}
+	</delete>
+	
+	<select id="boardLikeCount" parameterType="Long" resultType="Integer">
+		SELECT COUNT(*)
+		FROM GROUP_BOARD_FAV
+		WHERE psnum = #{psnum}
+	</select>
+	
+	<select id="memberBoardLiked" parameterType="map" resultType="com.sp.app.model.Meeting">
+		SELECT psnum, num
+		FROM GROUP_BOARD_FAV
+		WHERE psnum = #{psnum} AND num = #{num}
+	</select>
+	
+	<insert id="reply" parameterType="com.sp.app.model.Meeting">
+		INSERT INTO GROUP_BOARD_REPLY (rpnum, rpcontent, rpreg_date, psnum, num, rpblind)
+			VALUES (group_board_reply_seq.NEXTVAL, #{rpcontent}, SYSDATE, #{psnum}, #{num}, 0)
+	</insert>
+	
+	<select id="replyCount" parameterType="map" resultType="Integer">
+		SELECT NVL(COUNT(*), 0)
+		FROM GROUP_BOARD_REPLY
+		WHERE psnum = #{psnum} AND rpblind = 0
+	</select>
+	
+	<select id="listReply" parameterType="map" resultType="com.sp.app.model.Meeting">
+		SELECT r.rpnum, r.rpcontent, r.rpreg_date, r.psnum, rpblind, r.num, m.nickname, m.profile_image,
+			NVL(likeCount, 0) likeCount,
+			NVL(disLikeCount, 0) disLikeCount, COALESCE(l.rplike, -1) rplike
+		FROM GROUP_BOARD_REPLY r
+		JOIN member m ON r.num = m.num
+		LEFT OUTER JOIN (
+			SELECT rpnum, COUNT(DECODE(rplike, 1, 1)) likeCount,
+				COUNT(DECODE(rplike, 0, 1)) disLikeCount
+			FROM GROUP_BOARD_LIKE
+			GROUP BY rpnum
+		) c ON r.rpnum = c.rpnum
+		LEFT OUTER JOIN GROUP_BOARD_LIKE l ON r.rpnum = l.rpnum AND l.num = #{num}
+		WHERE r.psnum = #{psnum} AND r.rpblind = 0
+		ORDER BY r.rpnum DESC
+		OFFSET #{offset} ROWS FETCH FIRST #{size} ROWS ONLY
+	</select>
+	
+	<delete id="deleteReply" parameterType="map">
+		DELETE FROM GROUP_BOARD_REPLY
+		WHERE rpnum = #{rpnum}
+	</delete>
+	
+	<insert id="replyLike" parameterType="map">
+		INSERT INTO GROUP_BOARD_LIKE (rpnum, num, rplike)
+			VALUES(#{rpnum}, #{num}, #{rplike})
+	</insert>
+	
+	<select id="replyLikeCount" parameterType="map" resultType="map">
+		SELECT COUNT(DECODE(rplike, 1, 1)) likeCount, COUNT(DECODE(rplike, 0, 1)) disLikeCount
+		FROM GROUP_BOARD_LIKE
+		WHERE rpnum = #{rpnum}
+	</select>
+	
+	<select id="memberReplyLiked" parameterType="map" resultType="Integer">
+		SELECT rpnum, num, rplike
+		FROM GROUP_BOARD_LIKE
+		WHERE rpnum = #{rpnum} AND num = #{num}
+	</select>
+	
+</mapper>

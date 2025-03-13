@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sp.app.admin.mapper.ProductManageMapper">
+	
+	<select id="listBigCategory" resultType="com.sp.app.admin.model.ProductManage">
+		SELECT cbn, cbc
+		FROM category_big	 
+	</select>
+	
+	<select id="listSmallCategory" parameterType="Integer" resultType="com.sp.app.admin.model.ProductManage">
+		SELECT csn, csc, cbn
+		FROM category_small
+		WHERE cbn = #{cbn}	
+	</select>
+	
+	<insert id="insertProduct" parameterType="com.sp.app.admin.model.ProductManage">
+		INSERT INTO product(pnum, ptype, pname, pct, pph, csn)
+		VALUES (product_seq.NEXTVAL, #{ptype}, #{pname}, #{pct}, #{pph}, #{csn})
+	</insert>
+	<insert id="insertStock" parameterType="com.sp.app.admin.model.ProductManage">
+		INSERT INTO product_together_stock (pnum, ptsc, ptsq, ptst)
+		VALUES (product_seq.CURRVAL, #{ptsc}, #{ptsq}, #{ptst})
+	</insert>	
+	<insert id="insertProductImage" parameterType="com.sp.app.admin.model.ProductManage">
+		INSERT INTO product_picture (ppnum, ppp, pnum)
+		VALUES (product_picture_seq.NEXTVAL, #{ppp}, product_seq.CURRVAL)
+	</insert>
+	
+	
+	<delete id="deleteProductImage" parameterType="Long">
+	    DELETE FROM product_picture WHERE pnum = #{pnum}
+	</delete>
+	<delete id="deleteStock" parameterType="Long">
+	    DELETE FROM product_together_stock WHERE pnum = #{pnum}
+	</delete>
+	<delete id="deleteProduct" parameterType="Long">
+	    DELETE FROM product WHERE pnum = #{pnum}
+	</delete>
+	
+	<select id="listProductFile" parameterType="Long">
+		SELECT ppnum, ppp, pnum
+		FROM product_picture
+		WHERE pnum = #{pnum}
+	</select>
+	
+	
+	<insert id="insertTogetherProduct" parameterType="com.sp.app.admin.model.ProductManage">
+		INSERT INTO product_together (pnum, ptp, ptsp, ptq, ptd, ptsd, pted, ptdd, status, pttq)
+		VALUES (#{pnum}, #{ptp}, #{ptsp}, #{pttq}, SYSDATE, #{ptsd}, #{pted}, #{ptdd}, #{status}, #{pttq})
+	</insert>	
+	
+	<update id="updateTogetherProduct" parameterType="com.sp.app.admin.model.ProductManage">
+		UPDATE product_together SET ptp=#{ptp}, ptsp=#{ptsp}, pttq =#{pttq},
+			ptsd = #{ptsd}, pted = #{pted}, ptdd = #{ptdd},
+			ptq = ptq + (#{pttq} - (SELECT pttq FROM product_together WHERE pnum = #{pnum})) 
+		WHERE pnum = #{pnum}
+	</update>
+	
+	<update id="updateTogetherQuantity">
+		UPDATE product_together SET ptq = ptq - #{odq}
+		WHERE pnum = #{pnum}
+	</update>
+	
+	
+	<delete id="deleteTogetherProduct" parameterType="Long">
+		DELETE FROM product_together
+		WHERE pnum = #{pnum}
+	</delete>
+
+	<update id="updateSaleComplete" parameterType="Long">
+		UPDATE product_together_stock SET ptsq = 0
+		WHERE pnum = #{pnum}
+		
+	</update>
+	
+
+	<select id="dataCount" parameterType="map" resultType="Integer">
+		SELECT NVL(COUNT(*),0)
+		FROM product_together_stock
+	</select>
+	
+	<select id="listProduct" parameterType="map" resultType="com.sp.app.admin.model.ProductManage">
+		SELECT p.pnum, p.pname, p.pph, cs.csc, cb.cbc, ts.ptsc, ts.ptsq,
+		CASE 
+            WHEN pt.pnum IS NULL THEN 'N' 
+            ELSE 'Y'                     
+        END AS asRegister
+		FROM product p
+		JOIN category_small cs ON p.csn = cs.csn
+		JOIN category_big cb ON cb.cbn = cs.cbn
+		JOIN product_together_stock ts ON p.pnum = ts.pnum
+		LEFT JOIN product_together pt ON p.pnum = pt.pnum
+		ORDER BY pnum DESC
+		OFFSET #{offset} ROWS FETCH FIRST #{size} ROWS ONLY	
+	</select>
+	
+	<select id="dataCount2" parameterType="map" resultType="Integer">
+		SELECT COUNT(*)
+		FROM product_together
+		<where>
+			<if test="schType != null">
+				<include refid="where-list"/>
+			</if>
+		</where>
+	</select>
+	
+	<select id="dataCount3" parameterType="map" resultType="Integer">
+		SELECT COUNT(*)       
+		FROM product_together pt
+		JOIN product p ON p.pnum = pt.pnum
+		<where>
+			<if test="csn != 0">
+            	AND p.csn = #{csn}
+        	</if>
+		</where>		
+	</select>
+	
+	<select id="listTogetherProduct" parameterType="map" resultType="com.sp.app.admin.model.ProductManage">
+		SELECT p.pnum, p.pname, p.pph, pt.ptp, pt.ptsp, pt.ptq, ts.ptsq, pt.status, pt.pttq,
+		TO_CHAR(pt.ptd, 'YYYY-MM-DD') AS ptd, 
+		TO_CHAR(pt.ptsd, 'YYYY-MM-DD') AS ptsd, 
+		TO_CHAR(pt.pted, 'YYYY-MM-DD') AS pted, 
+		TO_CHAR(pt.ptdd, 'YYYY-MM-DD') AS ptdd
+		FROM product p
+		JOIN product_together_stock ts ON p.pnum = ts.pnum
+		LEFT JOIN product_together pt ON p.pnum = pt.pnum
+		<where>
+			<if test="schType == null or schType == 'all'">
+      			pt.pnum IS NOT NULL
+   			</if>
+			<if test="schType != null and schType != 'all'" >
+				AND <include refid="where-list"/>
+			</if>
+			<if test="csn != 0 and csn != null">
+            	AND p.csn = #{csn}
+        	</if>
+		</where>
+		ORDER BY pt.pnum DESC
+		OFFSET #{offset} ROWS FETCH FIRST #{size} ROWS ONLY	
+	</select>
+
+	<sql id="where-list">
+    <choose>
+        <when test="schType == 'all'">
+        </when>
+        
+        <when test="schType == 'astatus'">
+            status = '진행전'
+        </when>
+        
+        <when test="schType == 'bstatus'">
+            status = '진행중'
+        </when>
+
+        <when test="schType == 'cstatus'">
+            status = '구매성공'
+        </when>
+
+        <when test="schType == 'dstatus'">
+            status = '구매실패'
+        </when>
+        
+        <when test="schType == 'estatus'">
+            status = '판매완료'
+        </when>
+        <otherwise>
+        </otherwise>
+    </choose>
+	</sql>	
+	
+	
+	<select id="findByPnum" parameterType="Long" resultType="com.sp.app.admin.model.ProductManage">
+		SELECT p.pnum, p.pname, p.pph, p.pct, ts.ptsq, 
+		       LISTAGG(pp.ppp, ',') WITHIN GROUP (ORDER BY pp.ppp) AS ppp, 
+		       pt.ptp, pt.ptsp, pt.ptq, pt.ptd, pt.status, pt.pttq,
+		       TO_CHAR(pt.ptsd, 'YYYY-MM-DD') AS ptsd, 
+		       TO_CHAR(pt.pted, 'YYYY-MM-DD') AS pted, 
+		       TO_CHAR(pt.ptdd, 'YYYY-MM-DD') AS ptdd
+		FROM product p
+		JOIN product_together_stock ts ON p.pnum = ts.pnum
+		LEFT JOIN product_picture pp ON p.pnum = pp.pnum
+		LEFT JOIN product_together pt ON p.pnum = pt.pnum
+		WHERE p.pnum = #{pnum}
+		GROUP BY p.pnum, p.pname, p.pph, p.pct, ts.ptsq, 
+		         pt.ptp, pt.ptsp, pt.ptq, pt.ptd, pt.status, pt.pttq, 
+		         pt.ptsd, pt.pted, pt.ptdd
+	
+	</select>
+	
+	
+	<update id="updateStatus">
+		UPDATE product_together
+	   	SET status = #{status}
+	    WHERE pnum = #{pnum}
+	</update>
+	
+	
+	<update id="updateStatusIng">
+		UPDATE product_together 
+    	SET status = '진행중'
+    	WHERE status = '진행전' 
+    	AND TO_CHAR(SYSDATE, 'YYYYMMDD') >= TO_CHAR(ptsd, 'YYYYMMDD')
+	</update>
+	
+	<update id="updateStatusFail">
+		UPDATE product_together 
+	    SET status = '구매실패'
+	    WHERE status = '진행중'
+	    AND TO_CHAR(SYSDATE, 'YYYYMMDD') > TO_CHAR(pted, 'YYYYMMDD')
+	</update>
+	
+	<update id="updateSaleStatus" parameterType="Long">
+		UPDATE product_together
+		SET status = '판매완료'
+		WHERE pnum =#{pnum}
+	</update>
+	
+	<insert id="insertLikeProduct">
+		INSERT INTO member_liked (mlnum, mlq, mld, num, pnum)
+		VALUES (MEMBER_LIKED_SEQ.NEXTVAL, 1, SYSDATE, #{num}, #{pnum})
+	</insert>
+	
+	<delete id="deleteLikeProduct">
+		DELETE FROM member_liked
+		WHERE num = #{num} AND pnum = #{pnum}
+	</delete>
+	
+	<select id="likedProduct" parameterType="Long" resultType="Long">
+		SELECT pnum
+		FROM member_liked
+		WHERE num=#{num}
+	</select>
+	
+	
+	<select id="checkStatus" parameterType="Long" resultType="String">
+		SELECT status
+		FROM product_together 
+		WHERE pnum = #{pnum}
+	</select>
+	
+	<update id="updatePointRecord" parameterType="Long">		
+		MERGE INTO POINT_RECORD pr
+	    USING (
+	        SELECT o.num, SUM(o.op) AS total_op
+	        FROM ORD o
+	        JOIN ORD_DETAIL od ON o.onum = od.onum
+	        WHERE od.pnum = #{pnum}
+	        GROUP BY o.num  
+	    ) refund
+	    ON (pr.num = refund.num)
+	    WHEN MATCHED THEN
+	    UPDATE SET pr.pretp = pr.pretp + refund.total_op		
+	</update>
+	
+	<select id="listPointRecord" parameterType="Long" resultType="map">
+	    SELECT o.num as num ,COALESCE(SUM(o.op), 0) prep
+	    FROM ORD o
+	    JOIN ORD_DETAIL od ON o.onum = od.onum
+	    WHERE od.pnum = #{pnum}
+	    GROUP BY o.num
+	</select>
+		
+	<insert id="insertRefundRecord">
+		INSERT INTO point_record(prnum, prec, pret, prep, pretp, prepd, num)
+		VALUES(point_record_seq.NEXTVAL, '공동구매실패 환불', '적립', #{prep}, COALESCE(#{totalPoint}, 0) + #{prep}, SYSDATE, #{num})
+	</insert>
+	
+	
+</mapper>

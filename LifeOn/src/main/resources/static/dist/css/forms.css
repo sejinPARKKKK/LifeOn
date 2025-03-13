@@ -1,0 +1,70 @@
+﻿@charset "UTF-8";
+
+.btn {
+	color: #333;
+	border: 1px solid #999;
+	background: #FBFBFB;
+	padding: 5px 10px;
+	border-radius: 10px;
+	font-weight: 500;
+	cursor: pointer;
+	font-size: 14px;
+	vertical-align: baseline;
+}
+.btn:active, .btn:focus, .btn:hover {
+	color: #FFF;
+	border: 1px solid #999;
+	background-color: #006AFF;
+	opacity: .95;
+}
+.btn[disabled], fieldset[disabled] .btn {
+	pointer-events: none;
+	cursor: default;
+	opacity: .65;
+}
+.btn-dark { background: #333; border:1px solid #222; color:#fff; }
+.btn-dark:hover, .btn-dark:active, .btn-dark:focus { background: #222; border:1px solid #222; color:#fff; }
+.btn-primary { background: #006AFF; border:1px solid #999; color:#fff; }
+.btn-primary:hover, .btn-primary:active, .btn-primary:focus { background: #005FCE; border:1px solid #999; color:#fff; }
+.btnConfirm {
+    background: #006AFF;
+    border: solid 1px #999;
+    color: #fff;
+    font-size: 17px;
+    padding: 15px 10px;
+    text-align: center;
+    width: 100%;
+    border-radius: 7px;
+    vertical-align: baseline;
+}
+.btnConfirm:hover, .btnConfirm:focus, .btnConfirm:active {
+	font-weight: 400;
+	background: #005FCE;
+	border: solid 1px #999;
+}
+.btn-active, .btn-active:focus, .btn-active:hover {
+	color: #006AFF;
+	font-weight: 600;
+}
+/* form */
+.form-control {
+	border: 1px solid #999; border-radius: 4px; background-color: #fff;
+	padding: 5px 5px; 
+	vertical-align: baseline;
+}
+.form-control[readonly] { background-color:#f8f9fa; }
+textarea.form-control { height: 170px; resize : none; }
+.form-select {
+	border: 1px solid #999; border-radius: 4px; background-color: #fff;
+	padding: 4px 5px; 
+	vertical-align: baseline;
+}
+.form-select[readonly] { background-color:#f8f9fa; }
+.form-check-input { width: 1em; height: 1em; vertical-align: middle; background-color: #fff; border: 1px solid rgba(0,0,0,.25); margin-top: 7px; margin-bottom: 7px; }
+.form-check-input:checked { background-color: #006AFF; border-color: #006AFF; }
+.form-check-input[type=checkbox] { border-radius: 0.25em; }
+.form-check-label { cursor: pointer; vertical-align: middle; margin-top: 7px; margin-bottom: 7px; }
+.form-check-inline { display: inline-block; margin-right: 1rem; }
+textarea:focus, input:focus { outline: none; }
+input[type=checkbox], input[type=radio] { vertical-align: middle; }
+.form-control-plaintext { display: block; width: 100%; padding: 0.18rem 0; margin-bottom: 0; line-height: 1.5; }

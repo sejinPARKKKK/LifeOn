@@ -1,0 +1,188 @@
+/* auction_main_prize.jsp에 추가할 CSS */
+.auction-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 1.5rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.auction-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.tag-line {
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: var(--transition);
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+}
+
+.tag-line:hover {
+    color: var(--text-color);
+}
+
+.tag-line.select-line {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+    font-weight: 600;
+}
+
+.prize-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem 0;
+}
+
+.prize-card {
+    background-color: white;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: var(--transition);
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.prize-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow);
+}
+
+.prize-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.prize-content {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.prize-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+}
+
+.prize-price-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+}
+
+.prize-price {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.prize-status {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    background-color: var(--secondary-color);
+}
+
+.prize-status.active {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: var(--success-color);
+}
+
+.prize-status.pending {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: var(--warning-color);
+}
+
+.prize-status.closed {
+    background-color: rgba(108, 117, 125, 0.1);
+    color: var(--text-muted);
+}
+
+.prize-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: auto;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.time-container {
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.time-content {
+    display: inline-block;
+    margin-right: 0.5rem;
+    font-weight: 500;
+}
+
+.time {
+    display: inline-block;
+    font-weight: 600;
+    color: var(--danger-color);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .prize-container {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 1rem;
+    }
+
+    .prize-image {
+        height: 160px;
+    }
+
+    .prize-content {
+        padding: 0.75rem;
+    }
+
+    .prize-name {
+        font-size: 0.9rem;
+    }
+
+    .prize-price {
+        font-size: 1rem;
+    }
+}
+
+.empty-message {
+    width: 100%;
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-muted);
+    background-color: var(--secondary-color);
+    border-radius: var(--radius);
+    margin: 1rem 0;
+    font-size: 1rem;
+}
+
+.prize-card {
+    display: flex; /* 기본적으로 flex로 표시 */
+}

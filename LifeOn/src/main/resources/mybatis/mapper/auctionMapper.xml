@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sp.app.mapper.AuctionMapper">
+
+    <sql id="category-search">
+        <choose>
+            <when test="searchType == 'true'">
+                ( INSTR(subject, #{kwd}) &gt; 0
+                OR INSTR(content, #{kwd}) &gt; 0 ) OR
+                ( TO_CHAR(reg_date, 'YYYY-MM-DD') = #{kwd}
+                OR TO_CHAR(reg_date, 'YYYYMMDD') = #{kwd} )OR
+                ( INSTR(category, #{kwd}) &gt; 0 )
+            </when>
+        </choose>
+    </sql>
+
+    <sql id="category-prize-search">
+        <choose>
+            <when test="categoryType == 'big'">
+                p.PTYPE = '경매' AND CB.CBN = #{cbn}
+            </when>
+            <when test="categoryType == 'small'">
+                p.PTYPE = '경매' AND CS.CSC = #{csc}
+            </when>
+        </choose>
+    </sql>
+
+    <!--  상품 갯수 확인  -->
+    <select id="dataCount" resultType="int" parameterType="map">
+        SELECT NVL(COUNT(*), 0)
+        FROM PRODUCT p
+        JOIN MEMBER M on M.NUM = p.NUM
+        JOIN PRODUCT_AUCTION PA on p.PNUM = PA.PNUM
+        JOIN CATEGORY_SMALL CS on CS.CSN = p.CSN
+        JOIN CATEGORY_BIG CB on CB.CBN = CS.CBN
+        <where>
+            <if test="categoryType != null and categoryType != ''">
+                <include refid="category-prize-search"/>
+            </if>
+        </where>
+    </select>
+
+
+    <!-- 대분류 카테고리 가져오기 -->
+    <select id="findByAllCategoryBig" parameterType="map" resultType="com.sp.app.auction.vo.CategoryBig">
+        SELECT CBN, CBC
+        FROM CATEGORY_BIG
+    </select>
+
+    <!-- 대분류에 맞는 소분류 카테고리 가져오기 -->
+    <select id="findByAllCategorySmall" parameterType="map" resultType="com.sp.app.auction.vo.CategorySmall">
+        SELECT CSN, CSC, CBN
+        FROM CATEGORY_SMALL CS
+        <if test="cbn != null and cbn != ''">
+            WHERE CBN = #{cbn}
+        </if>
+
+    </select>
+
+    <!--  분류에 맞는 카테고리 상품 가져옴  -->
+    <select id="findByBigCategory" parameterType="map" resultType="com.sp.app.auction.response.prize.PrizeRep">
+        SELECT p.PNUM, PPH as thumbnail, PNAME as prName,
+        PASD AS stDate, PAED AS edDate, LP AS price, PAS as prStatus,
+        NICKNAME as sellerName, pat as tradeType, fp as finalP,
+        CS.CSN as smallNum, CB.CBN as bigNum
+        FROM PRODUCT p
+        JOIN MEMBER M on M.NUM = p.NUM
+        JOIN PRODUCT_AUCTION PA on p.PNUM = PA.PNUM
+        JOIN CATEGORY_SMALL CS on CS.CSN = p.CSN
+        JOIN CATEGORY_BIG CB on CB.CBN = CS.CBN
+        <where>
+            <if test="categoryType != null and categoryType != ''">
+                <include refid="category-prize-search"/>
+            </if>
+        </where>
+        ORDER BY p.PNUM
+        OFFSET #{offset} ROWS FETCH FIRST #{size} ROWS ONLY
+    </select>
+
+    <!-- 경매장 메인페이지 판매물품 리스트 가져오기 -->
+    <select id="findByAllPrize" parameterType="map" resultType="com.sp.app.auction.response.prize.PrizeRep">
+        SELECT p.PNUM,
+               PPH      as thumbnail,
+               PNAME    as prName,
+               PASD     AS stDate,
+               PAED     AS edDate,
+               LP       AS price,
+               PAS      as prStatus,
+               NICKNAME as sellerName,
+               pat      as tradeType,
+               fp       as finalP,
+               CS.CSN   as smallNum,
+               CB.CBN   as bigNum
+        FROM PRODUCT p
+                 JOIN MEMBER M on M.NUM = p.NUM
+                 JOIN PRODUCT_AUCTION PA on p.PNUM = PA.PNUM
+                 JOIN CATEGORY_SMALL CS on CS.CSN = p.CSN
+                 JOIN CATEGORY_BIG CB on CB.CBN = CS.CBN
+        WHERE PTYPE = '경매'
+        ORDER BY p.PNUM
+        OFFSET #{offset} ROWS FETCH FIRST #{size} ROWS ONLY
+    </select>
+
+    <!-- 판매페이지 데이터 가져오기   -->
+    <select id="findByPrize" parameterType="map" resultType="com.sp.app.auction.response.prize.PrizeDetailRep">
+        SELECT p.PNUM,
+               PPH      as thumbnail,
+               PNAME    as prName,
+               PASD     AS stDate,
+               PAED     AS edDate,
+               PARD    AS upToDate,
+               LP       AS price,
+               PAS      as prStatus,
+               NICKNAME as sellerName,
+               pat      as tradeType,
+               fp       as finalP,
+               CS.CSN   as smallNum,
+               CB.CBN   as bigNum,
+               p.PCT    as prContent
+        FROM PRODUCT p
+                 JOIN MEMBER M on M.NUM = p.NUM
+                 JOIN PRODUCT_AUCTION PA on p.PNUM = PA.PNUM
+                 JOIN CATEGORY_SMALL CS on CS.CSN = p.CSN
+                 JOIN CATEGORY_BIG CB on CB.CBN = CS.CBN
+        WHERE PTYPE = '경매'
+          AND p.PNUM = #{pnum}
+        <if test="type != '입찰' and type != null">
+            AND M.NUM = #{userId,jdbcType=BIGINT}
+        </if>
+    </select>
+
+<!--  판매페이지 이미지파일명 가져오기  -->
+    <select id="findByPrizeImg" parameterType="map" resultType="java.lang.String">
+        SELECT ppp as prImgList
+        FROM PRODUCT_PICTURE
+        WHERE PNUM = #{pnum}
+    </select>
+
+
+
+    <!--  경매 마감 상품 업데이트  -->
+    <update id="updateFinalPrizeStatus" parameterType="map">
+        UPDATE PRODUCT_AUCTION
+        SET FP = #{fp}, PAS = #{status}
+        WHERE PNUM = #{pnum}
+    </update>
+
+    <update id="updatePrizePrice" parameterType="map">
+        UPDATE PRODUCT_AUCTION
+        SET LP = #{price}
+        WHERE PNUM = #{pnum}
+    </update>
+
+    <!--  경매 상품 입찰 여부 확인  -->
+    <select id="findByBidding" parameterType="map" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM PRODUCT_AUCTION_BID b
+        WHERE b.PNUM = #{pnum}
+          AND b.NUM = #{userId}
+    </select>
+
+    <!--  경매 상품 입찰  -->
+    <insert id="insertBidding" parameterType="map">
+        INSERT INTO PRODUCT_AUCTION_BID(PABN,PNUM, NUM,PABP, PABD)
+        VALUES (PRODUCT_AUCTION_BID_SEQ.nextval,#{pnum}, #{userId}, #{price}, SYSDATE)
+    </insert>
+
+    <!--  경매 상품 입찰 업데이트 -->
+    <update id="updateBidding" parameterType="map">
+        UPDATE PRODUCT_AUCTION_BID
+        SET PABP = #{price},PABD = SYSDATE
+        WHERE PNUM = #{pnum} AND NUM = #{userId}
+    </update>
+
+    <!--  경매 상품 입찰한 회원 확인  -->
+    <select id="findByUserId" parameterType="map" resultType="com.sp.app.auction.response.prize.PrizeRep">
+        SELECT NUM
+        FROM PRODUCT_AUCTION_BID
+        WHERE PNUM = #{pnum} AND PABP= #{price}
+    </select>
+
+    <!--  경매 상품 낙찰한 회원 및 가격 등록 -->
+    <insert id="insertProductBiddingSuccess" parameterType="map">
+        INSERT INTO PRODUCT_AUCTION_SUCCESSBID(PNUM, PASP, PASD, NUM)
+        VALUES (#{pnum}, #{fp}, SYSDATE, #{userId,jdbcType=BIGINT})
+    </insert>
+
+
+
+</mapper>

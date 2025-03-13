@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sp.app.admin.mapper.ReportMapper">
+	<select id="listReport" parameterType="map" resultType="com.sp.app.admin.model.Report">
+		SELECT r.repnum, r.repd, r.repr, m.nickName, r.repan, r.repsucees, r.repsucboolean
+		FROM report r
+		JOIN member m ON r.num = m.num
+	</select>
+
+	<select id="dataCount" parameterType="map" resultType="Integer">
+		SELECT COUNT(*)
+		FROM report 
+	</select>
+	
+	
+	<select id="findReportDetail" parameterType="long" resultType="map">
+		SELECT hb.subject AS title, hb.content, m.nickname AS author
+		FROM hybrid_board hb
+		JOIN report r ON r.repan = hb.psnum
+		JOIN member m ON m.num = hb.num 
+		WHERE r.repan = #{repan}
+	</select>
+	
+	<delete id="deletePost" parameterType="long">
+		DELETE FROM hybrid_board
+		WHERE psnum = ${psnum}
+	</delete>
+	
+	<update id="updateStatus">
+		UPDATE report
+		SET repsucboolean = #{repsucboolean},
+			repsucees = TO_DATE(#{repsucees}, 'YYYY-MM-DD HH24:MI:SS')
+		WHERE repan = #{repan}
+	</update>
+
+</mapper>

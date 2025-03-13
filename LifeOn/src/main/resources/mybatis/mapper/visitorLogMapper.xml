@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sp.app.admin.mapper.VisitorLogMapper">
+
+
+	<!-- 총회원수 조회 -->
+	<select id="countTotalMembers" resultType="int">
+		SELECT COUNT(*) FROM
+		member
+	</select>
+
+	<!-- 오늘가입한 회원 수 조회 -->
+	<select id="countTodayNewMembers" resultType="int">
+		SELECT COUNT(*)
+		FROM member
+		WHERE TRUNC(reg_date) = TRUNC(SYSDATE)
+	</select>
+
+	<!-- 회원 연령대 -->
+	<select id="MemberAgeDistribution" resultType="map">
+SELECT
+    CASE
+        WHEN age BETWEEN 10 AND 19 THEN '10대'
+        WHEN age BETWEEN 20 AND 29 THEN '20대'
+        WHEN age BETWEEN 30 AND 39 THEN '30대'
+        WHEN age BETWEEN 40 AND 49 THEN '40대'
+        WHEN age BETWEEN 50 AND 59 THEN '50대'
+        WHEN age BETWEEN 60 AND 69 THEN '60대'
+        ELSE '70대 이상'
+    END AS age_group,
+    COUNT(*) AS count
+	FROM (
+   		 SELECT TRUNC(MONTHS_BETWEEN(SYSDATE, 
+      		  CASE 
+           		 WHEN birth IS NOT NULL 
+            		 AND LENGTH(birth) = 8
+            		 AND REGEXP_LIKE(birth, '^[0-9]{2}/[0-9]{2}/[0-9]{2}$')
+              THEN TO_DATE(
+                (CASE 
+                    WHEN TO_NUMBER(SUBSTR(birth, 1, 2)) BETWEEN 0 AND 25 
+                    THEN '20' || SUBSTR(birth, 1, 2) 
+                    ELSE '19' || SUBSTR(birth, 1, 2) 
+                END) || '-' || SUBSTR(birth, 4, 2) || '-' || SUBSTR(birth, 7, 2),
+                'YYYY-MM-DD'
+            )
+        END
+    ) / 12) AS age
+    FROM member_detail
+    WHERE birth IS NOT NULL
+      AND LENGTH(birth) = 8 
+      AND REGEXP_LIKE(birth, '^[0-9]{2}/[0-9]{2}/[0-9]{2}$')
+) subquery
+GROUP BY CASE
+    WHEN age BETWEEN 10 AND 19 THEN '10대'
+    WHEN age BETWEEN 20 AND 29 THEN '20대'
+    WHEN age BETWEEN 30 AND 39 THEN '30대'
+    WHEN age BETWEEN 40 AND 49 THEN '40대'
+    WHEN age BETWEEN 50 AND 59 THEN '50대'
+    WHEN age BETWEEN 60 AND 69 THEN '60대'
+    ELSE '70대 이상'
+END
+ORDER BY CASE
+    WHEN age_group = '10대' THEN 1
+    WHEN age_group = '20대' THEN 2
+    WHEN age_group = '30대' THEN 3
+    WHEN age_group = '40대' THEN 4
+    WHEN age_group = '50대' THEN 5
+    WHEN age_group = '60대' THEN 6
+    ELSE 7
+END
+
+	</select>
+	
+	<select id="getGenderRatio" resultType="map">
+    SELECT 
+        gender AS gender_group,
+        COUNT(*) AS count
+    FROM member_detail
+    WHERE gender IN ('남자', '여자')
+    GROUP BY gender
+</select>
+
+
+</mapper>

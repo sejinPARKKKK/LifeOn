@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sp.app.lounge.mapper.FreeBoardMapper">
+
+	<select id="FreeBoardSeq" resultType="Long">
+		SELECT hybrid_board_seq.NEXTVAL FROM dual
+	</select>
+
+	<insert id="insertBoard" parameterType="com.sp.app.lounge.model.FreeBoard">
+	    INSERT INTO HYBRID_BOARD (psnum, num, subject, content, reg_date, blind, hitCount, ipaddr, bdtype)
+	        VALUES (#{psnum}, #{num}, #{subject}, #{content}, SYSDATE, 0, 0, #{ipaddr}, #{bdtype})
+	</insert>
+	
+	<sql id="searchSql">
+		<choose>
+			<when test="schType == 'all'">
+				(INSTR(subject, #{kwd}) &gt; 0
+			    	OR DBMS_LOB.INSTR(content, #{kwd}) &gt; 0 )
+			</when>
+			<when test="schType == 'nickname'">
+				INSTR(nickname, #{kwd}) &gt; 0
+			</when>
+			<when test="schType == 'subject'">
+				INSTR(subject, #{kwd}) &gt; 0
+			</when>
+			<when test="schType == 'content'">
+				DBMS_LOB.INSTR(content, #{kwd}) &gt; 0
+			</when>
+			<when test="schType == 'reg_date'">
+				(TO_CHAR(reg_date, 'YYYY-MM-DD') = #{kwd}
+			    	OR TO_CHAR(reg_date, 'YYYYMMDD') = #{kwd})
+			</when>
+			<otherwise>
+				INSTR(${schType}, #{kwd}) &gt; 0
+			</otherwise>
+		</choose>
+	</sql>
+	
+	<select id="dataCount" parameterType="map" resultType="Integer">
+		SELECT NVL(COUNT(*), 0)
+		FROM HYBRID_BOARD hb
+		JOIN MEMBER m ON hb.num = m.num
+		<where>
+			<if test="kwd != null and kwd != '' ">
+				<include refid="searchSql"/>
+			</if>
+			AND blind = 0 AND bdtype = 'tip'
+		</where>
+	</select>
+	
+	<select id="listBoard" parameterType="map" resultType="com.sp.app.lounge.model.FreeBoard">
+		SELECT hb.psnum, m.num, m.id, nickname, subject, content, hb.reg_date, uddate, hb.blind, bdtype, m.grade, m.profile_image,
+			hitCount, NVL(replyCount, 0) replyCount, NVL(fileCount, 0) fileCount, NVL(boardLikeCount, 0) boardLikeCount
+		FROM HYBRID_BOARD hb
+		JOIN MEMBER m ON hb.num = m.num
+		LEFT OUTER JOIN (
+			SELECT psnum, COUNT(*) fileCount
+			FROM HYBRID_FILE
+			GROUP BY psnum
+		) hf ON hb.psnum = hf.psnum
+		LEFT OUTER JOIN (
+			SELECT COUNT(*) replyCount, ps_num
+			FROM HYBRID_BOARD_REPLY
+			GROUP BY ps_num
+		) c ON hb.psnum = c.ps_num
+		LEFT OUTER JOIN (
+			SELECT psnum, COUNT(*) boardLikeCount
+			FROM HYBRID_BOARD_FAV
+			GROUP BY psnum
+		) b ON hb.psnum = b.psnum
+		<where>
+			<if test="kwd != null and kwd != ''">
+				<include refid="searchSql"/>
+			</if>
+			AND bdtype = 'tip' AND blind = 0
+		</where>
+		ORDER BY psnum DESC
+		OFFSET #{offset} ROWS FETCH FIRST #{size} ROWS ONLY
+	</select>
+	
+	<select id="sortListBoard" parameterType="map" resultType="com.sp.app.lounge.model.FreeBoard">
+		SELECT hb.psnum, m.num, m.id, nickname, subject, content, hb.reg_date, uddate, hb.blind, bdtype, m.grade, m.profile_image,
+			hitCount, NVL(replyCount, 0) replyCount, NVL(fileCount, 0) fileCount, NVL(boardLikeCount, 0) boardLikeCount
+		FROM HYBRID_BOARD hb
+		JOIN MEMBER m ON hb.num = m.num
+		LEFT OUTER JOIN (
+			SELECT psnum, COUNT(*) fileCount
+			FROM HYBRID_FILE
+			GROUP BY psnum
+		) hf ON hb.psnum = hf.psnum
+		LEFT OUTER JOIN (
+			SELECT COUNT(*) replyCount, ps_num
+			FROM HYBRID_BOARD_REPLY
+			GROUP BY ps_num
+		) c ON hb.psnum = c.ps_num
+		LEFT OUTER JOIN (
+			SELECT psnum, COUNT(*) boardLikeCount
+			FROM HYBRID_BOARD_FAV
+			GROUP BY psnum
+		) b ON hb.psnum = b.psnum
+		WHERE bdtype = 'tip' AND blind = 0
+		<choose>
+			<when test="sortCd == 'hit'">
+				AND hitCount &gt; 0
+				ORDER BY hitCount DESC, psnum DESC
+			</when>
+			<when test="sortCd == 'reply'">
+				AND replyCount &gt; 0
+				ORDER BY replyCount DESC, psnum DESC
+			</when>
+			<when test="sortCd == 'like'">
+				AND boardLikeCount &gt; 0
+				ORDER BY boardLikeCount DESC, psnum DESC
+			</when>
+			<otherwise>
+				ORDER BY psnum DESC
+				OFFSET #{offset} ROWS FETCH FIRST #{size} ROWS ONLY
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findById" parameterType="Long" resultType="com.sp.app.lounge.model.FreeBoard">
+		SELECT hb.psnum, hb.num, nickname, subject, content, hitCount, hb.reg_date, uddate, hb.blind, bdtype, m.profile_image,
+			NVL(replyCount, 0) replyCount, NVL(boardLikeCount, 0) boardLikeCount
+		FROM HYBRID_BOARD hb
+		JOIN MEMBER m ON hb.num = m.num
+		LEFT OUTER JOIN (
+			SELECT COUNT(*) replyCount, ps_num
+			FROM HYBRID_BOARD_REPLY
+			GROUP BY ps_num
+		) r ON hb.psnum = r.ps_num
+		LEFT OUTER JOIN (
+			SELECT psnum, COUNT(*) boardLikeCount
+			FROM HYBRID_BOARD_FAV
+			WHERE psnum = #{psnum}
+			GROUP BY psnum
+		) c ON hb.psnum = c.psnum
+		WHERE hb.psnum = #{psnum} AND blind = 0 AND bdtype = 'tip'
+	</select>
+	
+	<update id="updateHitCount" parameterType="Long">
+		UPDATE HYBRID_BOARD SET hitCount = hitCount + 1
+		WHERE psnum = #{psnum}
+	</update>
+	
+	<select id="findByPrev" parameterType="map" resultType="com.sp.app.lounge.model.FreeBoard">
+		SELECT hb.psnum, subject
+		FROM HYBRID_BOARD hb
+		JOIN MEMBER m ON hb.num = m.num
+		<where>
+			<if test="kwd != null and kwd != ''">
+				<include refid="searchSql"/>
+			</if>
+		</where>
+		WHERE hb.psnum &gt; #{psnum, jdbcType=NUMERIC} AND blind = 0 AND bdtype = 'tip'
+		ORDER BY psnum ASC
+		FETCH FIRST 1 ROWS ONLY
+	</select>
+	
+	<select id="findByNext" parameterType="map" resultType="com.sp.app.lounge.model.FreeBoard">
+		SELECT hb.psnum, subject
+		FROM HYBRID_BOARD hb
+		JOIN MEMBER m ON hb.num = m.num
+		<where>
+			<if test="kwd != null and kwd != ''">
+				<include refid="searchSql"/>
+			</if>
+		</where>
+		WHERE hb.psnum &lt; #{psnum, jdbcType=NUMERIC} AND blind = 0 AND bdtype = 'tip'
+		ORDER BY psnum DESC
+		FETCH FIRST 1 ROWS ONLY
+	</select>
+	
+	<update id="updateBoard" parameterType="com.sp.app.lounge.model.FreeBoard">
+		UPDATE HYBRID_BOARD SET subject = #{subject}, content = #{content}, uddate = SYSDATE
+		WHERE psnum = #{psnum}
+	</update>
+	
+	<delete id="deleteBoard" parameterType="Long">
+		DELETE FROM HYBRID_BOARD
+		WHERE psnum = #{psnum}
+	</delete>
+	
+	<insert id="updateFile" parameterType="com.sp.app.lounge.model.FreeBoard">
+		INSERT INTO HYBRID_FILE (fnum, ssfname, cpfname, psnum)
+	    	VALUES (hybrid_file_seq.NEXTVAL, #{ssfname, jdbcType=VARCHAR}, #{cpfname, jdbcType=VARCHAR}, #{psnum})
+	</insert>
+	
+	<select id="listFile" parameterType="Long" resultType="com.sp.app.lounge.model.FreeBoard">
+		SELECT fnum, ssfname, cpfname, psnum
+		FROM HYBRID_FILE
+		WHERE psnum = #{psnum}    
+	</select>
+	
+	<select id="findByFileId" parameterType="Long" resultType="com.sp.app.lounge.model.FreeBoard">
+		SELECT fnum, ssfname, cpfname, psnum
+		FROM HYBRID_FILE
+	    WHERE fnum = #{fnum}
+	</select>
+	
+	<delete id="deleteFile" parameterType="Map">
+		DELETE FROM HYBRID_FILE
+		WHERE ${field} = #{psnum}
+	</delete>
+	
+	<insert id="insertBoardLike" parameterType="map">
+		INSERT INTO HYBRID_BOARD_FAV (psnum, num)
+			VALUES (#{psnum}, #{num})
+	</insert>
+	
+	<delete id="deleteBoardLike" parameterType="map">
+		DELETE FROM HYBRID_BOARD_FAV
+		WHERE psnum = #{psnum} AND num = #{num}
+	</delete>
+	
+	<select id="boardLikeCount" parameterType="Long" resultType="Integer">
+		SELECT COUNT(*)
+		FROM HYBRID_BOARD_FAV
+		WHERE psnum = #{psnum}
+	</select>
+	
+	<select id="memberBoardLiked" parameterType="map" resultType="com.sp.app.lounge.model.FreeBoard">
+		SELECT psnum, num
+		FROM HYBRID_BOARD_FAV
+		WHERE psnum = #{psnum} AND num = #{num}
+	</select>
+	
+	<insert id="insertBoardBlind" parameterType="map">
+		INSERT INTO REPORT (repnum, repr, repd, repan, repat, num)
+			VALUES (report_seq.NEXTVAL, #{repr}, SYSDATE, #{repan}, 3, #{num})
+	</insert>
+	
+	<select id="reprtNum" parameterType="map" resultType="long">
+		SELECT r.num as reprtNum FROM report r
+		JOIN member m ON m.num = r.num
+		WHERE repan = #{psnum} AND m.num = #{num}
+		FETCH FIRST 1 ROWS ONLY
+	</select>
+	
+	<insert id="insertReply" parameterType="com.sp.app.lounge.model.FreeBoard">
+		INSERT INTO HYBRID_BOARD_REPLY (rpnum, rpcontent, rpreg_date, ps_num, num, rpblind)
+			VALUES (hybrid_board_reply_seq.NEXTVAL, #{rpcontent}, SYSDATE, #{psnum}, #{num}, 0)
+	</insert>
+	
+	<update id="updateReplyBlind" parameterType="map">
+		UPDATE HYBRID_BOARD_REPLY SET rpblind = #{rpblind}
+		WHERE rpnum = #{rpnum}
+	</update>
+	
+	<select id="replyCount" parameterType="map" resultType="Integer">
+		SELECT NVL(COUNT(*), 0)
+		FROM HYBRID_BOARD_REPLY
+		WHERE ps_num = #{psnum}
+	</select>
+	
+	<select id="listReply" parameterType="map" resultType="com.sp.app.lounge.model.FreeBoard">
+		SELECT r.rpnum, r.rpcontent, r.rpreg_date, r.ps_num, rpblind, r.num, m.nickname, m.profile_image,
+			NVL(likeCount, 0) likeCount,
+			NVL(disLikeCount, 0) disLikeCount,
+			COALESCE(l.rplike, -1) rplike
+		FROM HYBRID_BOARD_REPLY r
+		JOIN member m ON r.num = m.num
+		LEFT OUTER JOIN (
+			SELECT rpnum, COUNT(DECODE(rplike, 1, 1)) likeCount,
+				COUNT(DECODE(rplike, 0, 1)) disLikeCount
+			FROM HYBRID_BOARD_LIKE
+			GROUP BY rpnum
+		) c ON r.rpnum = c.rpnum
+		LEFT OUTER JOIN HYBRID_BOARD_LIKE l ON r.rpnum = l.rpnum AND l.num = #{num}
+		WHERE r.ps_num = #{psnum}
+		ORDER BY r.rpnum DESC
+		OFFSET #{offset} ROWS FETCH FIRST #{size} ROWS ONLY
+	</select>
+	
+	<delete id="deleteReply" parameterType="map">
+		DELETE FROM HYBRID_BOARD_REPLY
+		WHERE rpnum = #{rpnum}
+	</delete>
+	
+	<insert id="insertReplyLike" parameterType="map">
+		INSERT INTO HYBRID_BOARD_LIKE (rpnum, num, rplike)
+			VALUES(#{rpnum}, #{num}, #{rplike})
+	</insert>
+	
+	<select id="replyLikeCount" parameterType="map" resultType="map">
+		SELECT COUNT(DECODE(rplike, 1, 1)) likeCount, COUNT(DECODE(rplike, 0, 1)) disLikeCount
+		FROM HYBRID_BOARD_LIKE
+		WHERE rpnum = #{rpnum}
+	</select>
+	
+	<select id="memberReplyLiked" parameterType="map" resultType="Integer">
+		SELECT rpnum, num, rplike
+		FROM HYBRID_BOARD_LIKE
+		WHERE rpnum = #{rpnum} AND num = #{num}
+	</select>
+	
+	<select id="memberBoradLike" parameterType="map" resultType="com.sp.app.lounge.model.FreeBoard">
+		SELECT f.psnum, f.num, subject,
+			(SELECT nickname FROM hybrid_board b JOIN member m ON b.num = m.num	WHERE psnum = 153) nickname,
+			hb.reg_date, hitCount,
+			CASE 
+		        WHEN bdtype = 'room' THEN '인테리어'
+		        WHEN bdtype = 'recipe' THEN '자취요리'
+		        WHEN bdtype = 'tip' THEN '생활팁'
+		        ELSE bdtype
+    		END AS bdtype
+		FROM hybrid_board_fav f
+		JOIN hybrid_board hb ON f.psnum = hb.psnum
+		JOIN member m ON f.num = m.num
+		WHERE f.num = #{num}
+	</select>
+	
+	<select id="likeDataCount" parameterType="map" resultType="Integer">
+		SELECT NVL(COUNT(*), 0)
+		FROM hybrid_board_fav
+        WHERE num = #{num}
+	</select>
+	
+</mapper>

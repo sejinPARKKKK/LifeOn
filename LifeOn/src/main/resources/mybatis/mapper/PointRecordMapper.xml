@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sp.app.mapper.PointRecordMapper">
+	
+	<sql id="where-list">
+    <choose>
+        <when test="schType == 'all'">
+        </when>
+        
+        <when test="schType == 'earn'">
+            pret = '적립'
+        </when>
+        
+        <when test="schType == 'use'">
+            pret = '사용'
+        </when>
+
+        <when test="schType == 'expire'">
+            pret = '소멸'
+        </when>
+
+        <when test="schType == 'charge'">
+            pret = '충전'
+        </when>
+        <otherwise>
+        </otherwise>
+    </choose>
+	</sql>
+	
+	
+	<select id="dataCount" parameterType="map" resultType="Integer">
+		SELECT NVL(COUNT(*),0)
+		FROM point_record
+		<where>
+			<if test="schType != null">
+				<include refid="where-list"/>
+			</if>
+			AND num = #{num}
+		</where>
+	</select>
+
+	<select id="listPoint" parameterType="map" resultType="com.sp.app.model.PointRecord">
+		SELECT *
+		FROM point_record
+		<where>
+			<if test="schType != null">
+				<include refid="where-list"/>
+			</if>
+			AND num = #{num}
+		</where>		
+		ORDER BY prnum DESC
+		OFFSET #{offset} ROWS FETCH FIRST #{size} ROWS ONLY
+	</select>
+	
+	<select id="totalPoint" parameterType="Long" resultType="Integer">
+		SELECT NVL((
+		    SELECT pretp 
+		    FROM point_record 
+		    WHERE num = #{num} 
+		    ORDER BY prnum DESC 
+		    FETCH FIRST 1 ROWS ONLY
+		), 0) FROM DUAL
+	</select>
+
+	<update id="insertAuctionPoint" parameterType="com.sp.app.model.PointRecord">
+		INSERT INTO point_record(prnum, PREC,PRET,PREP,PRETP,PREPD,NUM)
+		VALUES(POINT_RECORD_SEQ.nextval,#{prec},#{pret},#{prep},#{pretp},SYSDATE,#{userId})
+	</update>
+	
+	
+	<insert id="insertTogetherPoint" parameterType="map">
+		INSERT INTO point_record(prnum, prec, pret, prep, pretp, prepd, num)
+		VALUES(point_record_seq.NEXTVAL, '공동구매', '사용', #{prep},  COALESCE(#{totalPoint}, 0) + #{prep}, SYSDATE, #{num})
+	</insert>
+	
+	
+	<insert id="insertPointCharge" parameterType="map">
+		INSERT INTO point_record(prnum, prec, pret, prep, pretp, prepd, num)
+		VALUES (point_record_seq.NEXTVAL,'충전','충전',#{account},  COALESCE(#{totalPoint}, 0) + #{account}, SYSDATE, #{num})
+	</insert>
+
+	<insert id="insertCardPayment" parameterType="map">
+		INSERT INTO point_card(pcanum, prnum, pcat, pcad)
+		VALUES (#{authNumber}, point_record_seq.CURRVAL ,#{payMethod},  TO_DATE(#{authDate}, 'YYYY-MM-DD HH24:MI:SS'))
+	</insert>
+	
+	
+	<select id="dataCount2" parameterType="map" resultType="Integer">
+		SELECT COUNT(*)
+		FROM member_liked
+		WHERE num = #{num}
+	</select>
+	
+	<select id="listLikeProduct" parameterType="map" resultType="com.sp.app.model.LikeProduct">
+		select p.pnum, pname, pph
+		FROM product p
+		JOIN member_liked ml ON p.pnum = ml.pnum
+		WHERE ml.num = #{num}
+		ORDER BY mlnum DESC
+		OFFSET #{offset} ROWS FETCH FIRST #{size} ROWS ONLY
+	</select>
+	
+	
+
+	
+	
+	
+	
+</mapper>

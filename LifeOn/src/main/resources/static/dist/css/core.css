@@ -1,0 +1,134 @@
+﻿@charset "UTF-8";
+
+@font-face {
+    font-family: 'NEXON Lv1 Gothic OTF';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@2.1/NEXON Lv1 Gothic OTF.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+* { padding: 0; margin: 0; font-family: 'NEXON Lv1 Gothic OTF', sans-serif; }
+*, *::after, *::before { box-sizing: border-box; }
+
+body { font-size: 14px; font-family: 'NEXON Lv1 Gothic OTF', sans-serif; }
+
+a { text-decoration: none; color: #333; }
+a:hover, a:active{ text-decoration: underline; cursor: pointer; color: #006AFF; }
+
+textarea:focus, input:focus { outline: none; }
+
+.border-top1 { border-top: 1px solid #212529; }
+.border-top2 { border-top: 2px solid #212529; }
+.border-bottom1 { border-bottom: 1px solid #212529; }
+.border-bottom2 { border-bottom: 2px solid #212529; }
+
+/* Navigation */
+.navbar {
+	background-color: #FFF;
+	font-weight: 500;
+	font-size: 1rem;
+	line-height: 2rem;
+	box-shadow: 0 1px 6px 0 rgba(0, 0, 0, 0.05);
+}
+
+.navbar .navbar-nav {
+	margin-top: 0.75rem;
+	margin-bottom: 0.5rem;
+}
+
+.navbar .nav-item .nav-link {
+	color: #333;
+	transition: all 0.2s ease;
+	padding-top: 0.5rem;
+	padding-bottom: 0.5rem;
+}
+
+.navbar .nav-item .nav-link:hover,
+.navbar .nav-item .nav-link.active {
+	color: #006AFF;
+	text-decoration: none;
+}
+
+.navbar .dropdown-menu {
+	margin-top: 0.25rem;
+	margin-bottom: 0.25rem;
+}
+
+.navbar .dropdown-item {
+	color: #333;
+	font-weight: 500;
+	font-size: 0.875rem;
+	line-height: 0.875rem;
+	padding-top: 0.625rem;
+	padding-bottom: 0.625rem;	
+}
+
+.navbar .dropdown-item:hover {
+	background-color: #FBFBFB;
+	color: #006AFF;
+	text-decoration: none;
+}
+
+/* body */
+
+
+
+/* 페이징 */
+.page-navigation {
+	clear: both;
+	padding: 20px 0;
+	text-align: center;
+}
+
+/* 로딩 */
+.typing-indicator {
+	width: 60px;
+	height: 30px;
+	position: absolute;
+	top: 50% !important;;
+	left: 50% !important;;
+	transform: translate(-50%, -50%) !important;;
+	z-index: 4;
+}
+
+.typing-circle {
+	width: 8px;
+	height: 8px;
+	position: absolute;
+	border-radius: 50%;
+	background-color: #006AFF;
+	left: 15%;
+	transform-origin: 50%;
+	animation: typing-circle7124 0.5s alternate infinite ease;
+}
+	
+@keyframes typing-circle7124 {
+	0% { top: 20px; height: 5px; border-radius: 50px 50px 25px 25px; transform: scaleX(1.7); }
+	40% { height: 8px; border-radius: 50%; transform: scaleX(1); }
+	100% { top: 0%; }
+}
+
+.typing-circle:nth-child(2) { left: 45%; animation-delay: 0.2s; }
+.typing-circle:nth-child(3) { left: auto; right: 15%; animation-delay: 0.3s; }
+.typing-shadow {
+	width: 5px;
+	height: 4px;
+	border-radius: 50%;
+	background-color: rgba(0, 0, 0, 0.2);
+	position: absolute;
+	top: 30px;
+	transform-origin: 50%;
+	z-index: 3;
+	left: 15%;
+	filter: blur(1px);
+	animation: typing-shadow046 0.5s alternate infinite ease;
+}
+
+@keyframes typing-shadow046 {
+	0% { transform: scaleX(1.5); }
+	40% { transform: scaleX(1); opacity: 0.7; }
+	100% { transform: scaleX(0.2); opacity: 0.4; }
+}
+
+.typing-shadow:nth-child(4) { left: 45%; animation-delay: 0.2s; }
+.typing-shadow:nth-child(5) { left: auto; right: 15%; animation-delay: 0.3s; }

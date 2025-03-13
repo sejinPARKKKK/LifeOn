@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sp.app.mapper.AreaMapper">
+	
+	<select id="areaSeq" resultType="Long">
+		SELECT area_seq.NEXTVAL FROM dual
+	</select>
+ 
+	<insert id="insertBoard" parameterType="com.sp.app.model.Area">
+		INSERT INTO LOCAL_REVIEW (rvnum, num, rvsubject, rvcontent, rssubject, hitCount, lnum, thp, rvreg_date)
+		VALUES (#{rvnum}, #{num}, #{rvsubject}, #{rvcontent}, #{rssubject}, 0, #{lnum}, #{thp, jdbcType=VARCHAR}, SYSDATE)
+	</insert>
+	
+	<insert id="insertBoardFile" parameterType="com.sp.app.model.Area">
+		INSERT INTO LOCAL_REVIEW_FILE (fnum, ssfname, rvnum)
+	    	VALUES (LOCAL_REVIEW_FILE_seq.NEXTVAL, #{ssfname, jdbcType=VARCHAR}, #{rvnum})
+	</insert>
+	
+	<select id="listCategory" resultType="com.sp.app.model.Area">
+		SELECT lnum, ssname
+		FROM SUBWAY_STATION 
+	</select>
+
+	<sql id="searchSql">
+		<choose>
+			<when test="schType == 'all'">
+				(INSTR(rvsubject, #{kwd}) &gt; 0
+			    	OR DBMS_LOB.INSTR(rvcontent, #{kwd}) &gt; 0 )
+			</when>
+			
+			<when test="schType == 'lnum'">
+				INSTR(lnum, #{kwd}) &gt; 0
+			</when>
+			<otherwise>
+				INSTR(${schType}, #{kwd}) &gt; 0
+			</otherwise>
+		</choose>
+	</sql>
+	
+	<select id="dataCount" parameterType="map" resultType="Integer">
+		SELECT NVL(COUNT(*), 0)
+		FROM LOCAL_REVIEW lr
+		JOIN MEMBER m ON lr.num = m.num
+		<where>
+			<if test="kwd != null and kwd != '' ">
+				<include refid="searchSql"/>
+			</if>
+		</where>
+	</select>
+	
+	<select id="listBoard" parameterType="map" resultType="com.sp.app.model.Area">
+		SELECT lr.rvnum, m.num, lr.rvsubject, lr.rvcontent, thp, lr.lnum, rssubject, lr.hitCount, NVL(replyCount, 0) replyCount,
+		NVL(boardLikeCount, 0) boardLikeCount
+		FROM LOCAL_REVIEW lr
+		JOIN MEMBER m ON lr.num = m.num	
+		JOIN SUBWAY_STATION s  ON lr.lnum = s.lnum
+		LEFT OUTER JOIN (
+			SELECT COUNT(*) replyCount, rvnum
+			FROM LOCAL_REVIEW_REPLY
+			GROUP BY rvnum
+		) c ON lr.rvnum = c.rvnum
+		LEFT OUTER JOIN (
+			SELECT rvnum, COUNT(*) boardLikeCount
+			FROM LOCAL_REVIEW_FAV
+			GROUP BY rvnum
+		) lf ON lr.rvnum = lf.rvnum
+		<where>
+			<if test="kwd != null and kwd != ''">
+				<include refid="searchSql"/>
+			</if>
+			 <if test="lnum > 0">
+       			 AND lr.lnum = #{lnum}
+    		</if>
+		</where>
+		ORDER BY lr.rvnum DESC
+		OFFSET #{offset} ROWS FETCH FIRST #{size} ROWS ONLY
+	</select> 
+	
+	<select id="listAreaFile" parameterType="Long" resultType="com.sp.app.model.Area">
+		SELECT fnum, ssfname, rvnum
+		FROM LOCAL_REVIEW_FILE
+		WHERE rvnum = #{rvnum}    
+	</select>
+    
+	<select id="findById" parameterType="Long" resultType="com.sp.app.model.Area">
+		SELECT lr.rvnum, lr.num, rvsubject, rssubject, thp, rvcontent, hitCount, lr.rvreg_date, s.lnum, s.ssname, 
+			NVL(replyCount, 0) replyCount, NVL(boardLikeCount, 0) boardLikeCount
+		FROM LOCAL_REVIEW lr
+		JOIN MEMBER m ON lr.num = m.num
+		JOIN SUBWAY_STATION s ON lr.lnum = s.lnum
+		LEFT OUTER JOIN (
+			SELECT COUNT(*) replyCount, rvnum
+			FROM LOCAL_REVIEW_REPLY
+			GROUP BY rvnum
+		) r ON lr.rvnum = r.rvnum
+		LEFT OUTER JOIN (
+			SELECT rvnum, COUNT(*) boardLikeCount
+			FROM LOCAL_REVIEW_FAV
+			WHERE rvnum = #{rvnum}
+			GROUP BY rvnum
+		) c ON lr.rvnum = c.rvnum
+		WHERE lr.rvnum = #{rvnum}
+	</select>
+	
+	<select id="findByFileId" parameterType="Long" resultType="com.sp.app.model.Area">
+		SELECT fnum, ssfname, rvnum
+		FROM LOCAL_REVIEW_FILE
+	    WHERE fnum = #{fnum}
+	</select>
+	  
+	<!-- <update id="updateBoard" parameterType="com.sp.app.model.Meeting">
+		UPDATE GROUP_BOARD SET subject = #{subject}, content = #{content}, ies = #{ies}, loca = #{loca}, loca_d = #{loca_d},
+				gender = #{gender}, age = #{age}, cbn = #{cbn}, person_c = #{person_c}, mdate = #{mdate}, uddate = SYSDATE
+		WHERE psnum = #{psnum}
+	</update>
+	
+	<delete id="deleteBoard" parameterType="map">
+		DELETE FROM GROUP_BOARD
+		WHERE psnum = #{psnum}
+	</delete>
+	 -->
+	
+	<update id="updateHitCount" parameterType="Long">
+		UPDATE LOCAL_REVIEW SET hitCount = hitCount + 1
+		WHERE rvnum = #{rvnum}
+	</update>
+	
+	<insert id="boardLike" parameterType="map">
+		INSERT INTO LOCAL_REVIEW_FAV (rvnum, num)
+			VALUES (#{rvnum}, #{num})
+	</insert>
+	
+	<delete id="deleteBoardLike" parameterType="map">
+		DELETE LOCAL_REVIEW_FAV
+		WHERE rvnum = #{rvnum} AND num = #{num}
+	</delete>
+	
+	<select id="boardLikeCount" parameterType="Long" resultType="Integer">
+		SELECT COUNT(*)
+		FROM LOCAL_REVIEW_FAV
+		WHERE rvnum = #{rvnum}
+	</select>
+	
+	<select id="memberBoardLiked" parameterType="map" resultType="com.sp.app.model.Area">
+		SELECT rvnum, num
+		FROM LOCAL_REVIEW_FAV
+		WHERE rvnum = #{rvnum} AND num = #{num}
+	</select>
+	
+	<insert id="reply" parameterType="com.sp.app.model.Area">
+		INSERT INTO LOCAL_REVIEW_REPLY (rpnum, rpcontent, rpreg_date, rvnum, num)
+			VALUES (LOCAL_REVIEW_reply_seq.NEXTVAL, #{rpcontent}, SYSDATE, #{rvnum}, #{num})
+	</insert>
+	
+	<select id="replyCount" parameterType="map" resultType="Integer">
+		SELECT NVL(COUNT(*), 0)
+		FROM LOCAL_REVIEW_REPLY
+		WHERE rvnum = #{rvnum}
+	</select>
+	
+	<select id="listReply" parameterType="map" resultType="com.sp.app.model.Area">
+		SELECT r.rpnum, r.rpcontent, r.rpreg_date, r.rvnum, r.num, m.nickname, m.profile_image,
+			NVL(likeCount, 0) likeCount,
+			NVL(disLikeCount, 0) disLikeCount, COALESCE(l.rplike, -1) rplike
+		FROM LOCAL_REVIEW_REPLY r
+		JOIN member m ON r.num = m.num
+		LEFT OUTER JOIN (
+			SELECT rpnum, COUNT(DECODE(rplike, 1, 1)) likeCount,
+				COUNT(DECODE(rplike, 0, 1)) disLikeCount
+			FROM LOCAL_REVIEW_LIKE
+			GROUP BY rpnum
+		) c ON r.rpnum = c.rpnum
+		LEFT OUTER JOIN LOCAL_REVIEW_LIKE l ON r.rpnum = l.rpnum AND l.num = #{num}
+		WHERE r.rvnum = #{rvnum}
+		ORDER BY r.rpnum DESC
+		OFFSET #{offset} ROWS FETCH FIRST #{size} ROWS ONLY
+	</select>
+	
+	<delete id="deleteReply" parameterType="map">
+		DELETE FROM LOCAL_REVIEW_REPLY
+		WHERE rvnum = #{rvnum}
+	</delete>
+	
+	<insert id="replyLike" parameterType="map">
+		INSERT INTO LOCAL_REVIEW_LIKE (rpnum, num, rplike)
+			VALUES(#{rpnum}, #{num}, #{rplike})
+	</insert>
+	
+	<select id="replyLikeCount" parameterType="map" resultType="map">
+		SELECT COUNT(DECODE(rplike, 1, 1)) likeCount, COUNT(DECODE(rplike, 0, 1)) disLikeCount
+		FROM LOCAL_REVIEW_LIKE
+		WHERE rpnum = #{rpnum}
+	</select>
+	
+	<select id="memberReplyLiked" parameterType="map" resultType="Integer">
+		SELECT rpnum, num, rplike
+		FROM LOCAL_REVIEW_LIKE
+		WHERE rpnum = #{rpnum} AND num = #{num}
+	</select>
+	
+</mapper>
